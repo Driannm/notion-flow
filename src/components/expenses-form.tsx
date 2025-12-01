@@ -253,6 +253,7 @@ export default function ExpenseForm() {
                       <Input
                         name="shipping"
                         type="number"
+                        inputMode="numeric"
                         placeholder="0"
                         className="h-9 bg-background"
                         value={values.shipping}
@@ -266,6 +267,7 @@ export default function ExpenseForm() {
                       <Input
                         name="discount"
                         type="number"
+                        inputMode="numeric"
                         placeholder="0"
                         className="h-9 bg-background border-green-200 focus-visible:ring-green-500"
                         value={values.discount}
@@ -279,6 +281,7 @@ export default function ExpenseForm() {
                       <Input
                         name="serviceFee"
                         type="number"
+                        inputMode="numeric"
                         placeholder="0"
                         className="h-9 bg-background"
                         value={values.serviceFee}
@@ -290,6 +293,7 @@ export default function ExpenseForm() {
                       <Input
                         name="additionalFee"
                         type="number"
+                        inputMode="numeric"
                         placeholder="0"
                         className="h-9 bg-background"
                         value={values.additionalFee}
