@@ -1,23 +1,7 @@
 "use client";
 
-import { CATEGORY_IDS } from "@/lib/constants";
+import { CATEGORY_IDS, ICON_MAP } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { 
-  Utensils, ShoppingCart, Zap, Car, 
-  Baby, GraduationCap, Gift, MoreHorizontal 
-} from "lucide-react";
-
-// Mapping Icon biar cantik (Sesuaikan sama key di CATEGORY_IDS lo)
-const ICON_MAP: Record<string, any> = {
-  "Makan": Utensils,
-  "Belanja": ShoppingCart,
-  "Tagihan": Zap,
-  "Transport": Car,
-  "Anak": Baby,
-  "Pendidikan": GraduationCap,
-  // Default icon kalo ga ketemu
-  "default": MoreHorizontal
-};
 
 interface CategoryGridProps {
   value: string;
@@ -38,8 +22,8 @@ export function CategoryGrid({ value, onChange }: CategoryGridProps) {
             onClick={() => onChange(cat)}
             className={cn(
               "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-200 gap-2",
-              isActive 
-                ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-[1.02]" 
+              isActive
+                ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-[1.02]"
                 : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
           >
