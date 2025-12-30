@@ -18,7 +18,7 @@ import {
   Coins,
   MoreHorizontal,
   Clapperboard,
-  ShoppingBag
+  ShoppingBag,
 } from "lucide-react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -47,7 +47,7 @@ export const ICON_MAP: Record<string, any> = {
   "Vehicle Expenses": Car,
   "Taxes & Fee": BadgeDollarSign,
   "Digital Gaming Expenses": Gamepad2,
-  "default": MoreHorizontal,
+  default: MoreHorizontal,
 };
 
 export const CATEGORY_IDS: Record<string, string> = {
@@ -101,17 +101,14 @@ export const CATEGORY_GROUPS: Record<string, string[]> = {
     "Google Services",
     "Hobbies & Recreation",
   ],
-  "Transportasi": [
-    "Transport",
-    "Vehicle Expenses",
-  ],
+  "Transportasi": ["Transport", "Vehicle Expenses"],
   "Keuangan & Lainnya": [
     "Savings",
     "Shopping",
     "Cash Withdrawals",
     "Gift & Donations",
     "Miscellaneous",
-  ]
+  ],
 };
 
 export const PLATFORM_IDS: Record<string, string> = {
@@ -149,18 +146,14 @@ export const PLATFORM_GROUPS: Record<string, string[]> = {
     "Tokopedia",
     "Shopee-Food",
     "Tiket.com",
-    "Steam"
+    "Steam",
   ],
-  "Transport": [
-    "Gojek",
-    "Grab",
-    "Access By KAI"
-  ],
+  "Transport": ["Gojek", "Grab", "Access By KAI"],
   "Makanan / Tempat": [
     "Caffee & Restaurant",
     "Food Court",
     "Store & Minimarket",
-    "Gas Station"
+    "Gas Station",
   ],
   "Apps & Layanan": [
     "MyPertamina",
@@ -171,29 +164,32 @@ export const PLATFORM_GROUPS: Record<string, string[]> = {
     "Online Platform",
     "Website Platform",
   ],
-  "Offline": [
-    "Offline/Warung"
-  ]
+  "Offline": ["Offline/Warung"],
 };
 
 // PAYMENT LIST (flat)
 export const PAYMENT_METHODS = [
   "Bank Central Asia",
-  "Cash",
+  "Livin' by Mandiri",
+  "Blu by BCA Digital",
+  "Bank Jago",
   "Seabank",
-  "Link Aja"
+  "Gopay",
+  "Link Aja",
+  "Shopee-Pay",
+  "Spaylater",
+  "Cash",
 ];
 
 // GROUPED PAYMENT (untuk SelectGroup)
 export const PAYMENT_GROUPS: Record<string, string[]> = {
-  "Bank": [
+  Bank: [
     "Bank Central Asia",
+    "Livin' by Mandiri",
+    "Blu by BCA Digital",
+    "Bank Jago",
     "Seabank",
   ],
-  "eWallet": [
-    "Link Aja"
-  ],
-  "Tunai": [
-    "Cash"
-  ]
+  eWallet: ["Gopay", "Link Aja", "Shopee-Pay", "Spaylater"],
+  Tunai: ["Cash"],
 };

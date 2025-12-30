@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { addExpense } from "@/app/action"; // Sesuaikan path action lo
+import { addExpense } from "@/app/action";
+
 import { CATEGORY_IDS, PLATFORM_GROUPS, PAYMENT_GROUPS } from "@/lib/constants";
+
 import { CategorySelect } from "@/components/expense/category-select";
 import { AmountInput } from "@/components/expense/amount-input";
 
-// ShadCN Imports
+// shadcn/ui
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,21 +34,35 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Loader2, CalendarIcon, Tag, Store, Wallet } from "lucide-react";
+
+// icons & utils
+import { CalendarIcon, Tag, Store, Wallet, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
-import { id } from "date-fns/locale"; // Biar tanggal bahasa indo
+import { id } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 export default function ExpenseForm() {
+  // ref
   const formRef = useRef<HTMLFormElement>(null);
+
+  // ui states
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
 
-  // State Kategori
-  const [selectedCategory, setSelectedCategory] = useState("");
+  // template state
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [templates, setTemplates] = useState<any[]>([]);
 
-  // State Angka
+  // 🆕 state untuk name
+  const [name, setName] = useState("");
+
+  // select states
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [platform, setPlatform] = useState("");
+
+  // numeric inputs
   const [values, setValues] = useState({
     subtotal: "",
     shipping: "",
@@ -54,39 +70,109 @@ export default function ExpenseForm() {
     serviceFee: "",
     additionalFee: "",
   });
+
+  // preview total
   const [total, setTotal] = useState(0);
 
+  // ========================
+  // EFFECTS
+  // ========================
+
+  // hitung total preview
   useEffect(() => {
-    // Hapus koma sebelum hitung preview total
     const parse = (val: string) => parseInt(val.replace(/,/g, "")) || 0;
+
     const sub = parse(values.subtotal);
     const ship = parse(values.shipping);
     const disc = parse(values.discount);
     const serv = parse(values.serviceFee);
     const add = parse(values.additionalFee);
+
     setTotal(sub + ship + serv + add - disc);
   }, [values]);
 
+  // fetch templates
+  useEffect(() => {
+    async function loadTemplates() {
+      try {
+        const res = await fetch("/api/templates");
+
+        if (!res.ok) {
+          throw new Error("API error");
+        }
+
+        const data = await res.json();
+
+        if (!Array.isArray(data)) {
+          throw new Error("Templates is not array");
+        }
+
+        setTemplates(data);
+      } catch (err) {
+        console.error("Failed to load templates", err);
+        setTemplates([]); // fallback aman
+      }
+    }
+
+    loadTemplates();
+  }, []);
+
+  // ========================
+  // HANDLERS
+  // ========================
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValues({ ...values, [e.target.name]: e.target.value });
+    setValues({
+      ...values,
+      [e.target.name]: e.target.value,
+    });
   };
 
+  // 🆕 Update handler untuk template - ISI SEMUA FIELD
+  function handleTemplateSelect(id: string) {
+    const t = templates.find((x) => x.id === id);
+    if (!t) return;
+
+    // Set name
+    setName(t.name ?? "");
+
+    // Set amounts
+    setValues({
+      subtotal: String(t.subtotal ?? ""),
+      shipping: String(t.shipping ?? ""),
+      discount: String(t.discount ?? ""),
+      serviceFee: String(t.serviceFee ?? ""),
+      additionalFee: String(t.additionalFee ?? ""),
+    });
+
+    // Set selects
+    setSelectedCategory(t.category ?? "");
+    setPaymentMethod(t.paymentMethod ?? "");
+    setPlatform(t.platform ?? "");
+  }
+
   async function handleSubmit(formData: FormData) {
-    // 1. Validasi
-    const name = formData.get("name");
-    if (!name || !selectedCategory || !values.subtotal) {
+    const nameValue = formData.get("name");
+
+    if (!nameValue || !selectedCategory || !values.subtotal) {
       toast.error("Nama, Kategori, dan Nominal wajib diisi!");
       return;
     }
 
-    setLoading(true); // START LOADING
+    setLoading(true);
 
     try {
       formData.append("category", selectedCategory);
       formData.set("subtotal", values.subtotal.replace(/,/g, ""));
+
       if (values.shipping)
         formData.set("shipping", values.shipping.replace(/,/g, ""));
-      // ... bersihkan field angka lain ...
+      if (values.discount)
+        formData.set("discount", values.discount.replace(/,/g, ""));
+      if (values.serviceFee)
+        formData.set("serviceFee", values.serviceFee.replace(/,/g, ""));
+      if (values.additionalFee)
+        formData.set("additionalFee", values.additionalFee.replace(/,/g, ""));
 
       if (date) formData.append("date", date.toISOString());
 
@@ -95,6 +181,10 @@ export default function ExpenseForm() {
       if (result.success) {
         toast.success(result.message);
         formRef.current?.reset();
+        
+        // 🆕 Reset name juga
+        setName("");
+        
         setValues({
           subtotal: "",
           shipping: "",
@@ -103,6 +193,8 @@ export default function ExpenseForm() {
           additionalFee: "",
         });
         setSelectedCategory("");
+        setPaymentMethod("");
+        setPlatform("");
         setTotal(0);
       } else {
         toast.error(result.message);
@@ -128,10 +220,25 @@ export default function ExpenseForm() {
           }}
           className="space-y-8 pb-20 sm:pb-0"
         >
+          <Select onValueChange={handleTemplateSelect}>
+            <SelectTrigger className="h-11 w-full justify-start">
+              <SelectValue placeholder="Pakai template (opsional)" />
+            </SelectTrigger>
+
+            <SelectContent>
+              {templates.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  Template • {t.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           {/* 1. SECTION DUIT & NAMA (HERO) */}
           <div className="space-y-4 px-4 pt-4 sm:px-0 sm:pt-0">
             <AmountInput value={values.subtotal} onChange={handleChange} />
 
+            {/* 🆕 Input name dengan value dan onChange */}
             <div className="grid grid-cols-1 gap-4">
               <Input
                 name="name"
@@ -139,6 +246,8 @@ export default function ExpenseForm() {
                 className="h-12 bg-muted/30 border-muted focus-visible:ring-primary/20 text-lg"
                 required
                 autoComplete="off"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
             </div>
           </div>
@@ -189,11 +298,16 @@ export default function ExpenseForm() {
           </div>
 
           <div className="grid grid-cols-1 gap-3">
+            {/* 🆕 Payment Method dengan value dan onValueChange */}
             <div className="space-y-1.5 px-4">
               <Label className="text-xs text-muted-foreground ml-1">
                 Pembayaran
               </Label>
-              <Select name="paymentMethod">
+              <Select 
+                name="paymentMethod" 
+                value={paymentMethod}
+                onValueChange={setPaymentMethod}
+              >
                 <SelectTrigger className="h-11 w-full bg-background border-border/50 justify-start text-left">
                   <Wallet className="w-4 h-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Pilih metode pembayaran" />
@@ -217,20 +331,22 @@ export default function ExpenseForm() {
               </Select>
             </div>
 
-            {/* Row Platform */}
+            {/* 🆕 Platform dengan value dan onValueChange */}
             <div className="space-y-1.5 px-4">
               <Label className="text-xs text-muted-foreground ml-1">
                 Beli di mana?
               </Label>
-              <Select name="platform">
+              <Select 
+                name="platform"
+                value={platform}
+                onValueChange={setPlatform}
+              >
                 <SelectTrigger className="h-11 w-full bg-background border-border/50 justify-start text-left">
                   <Store className="w-4 h-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Pilih Toko/App (Opsional)" />
                 </SelectTrigger>
 
                 <SelectContent className="max-h-72">
-                  {" "}
-                  {/* biar scrollable */}
                   <SelectItem value="none">-- Skip --</SelectItem>
                   {Object.entries(PLATFORM_GROUPS).map(([groupName, items]) => (
                     <SelectGroup key={groupName}>
@@ -248,6 +364,7 @@ export default function ExpenseForm() {
               </Select>
             </div>
           </div>
+
           <div className="rounded-3xl p-5 mx-4 sm:mx-0 space-y-4 px-4">
             {/* ACCORDION (BIAYA TAMBAHAN) */}
             <Accordion

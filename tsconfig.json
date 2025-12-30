@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "src/lib/notes.js", "src/app/api/notes/routes.js"  ],
+, "src/lib/notes.js", "src/app/api/notes/routes.js", "src/app/api/templates/route.ts"  ],
   "exclude": ["node_modules"]
 }

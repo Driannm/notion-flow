@@ -1,11 +1,10 @@
-'use server'
+"use server";
 
-import { notion, DATABASE_ID } from "@/lib/notion";
+import { notion, DATABASE_ID } from "@/lib/notion-server";
 import { CATEGORY_IDS, PLATFORM_IDS } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 
 export async function addExpense(formData: FormData) {
-  // Helper buat ambil angka, default 0 kalo kosong
   const getNumber = (key: string) => {
     const val = formData.get(key);
     return val ? parseInt(val.toString()) : 0;
@@ -17,37 +16,33 @@ export async function addExpense(formData: FormData) {
   const categoryName = formData.get("category") as string;
   const platformName = formData.get("platform") as string;
 
-  // Angka-angka
   const subtotal = getNumber("subtotal");
   const shipping = getNumber("shipping");
   const discount = getNumber("discount");
   const serviceFee = getNumber("serviceFee");
   const additionalFee = getNumber("additionalFee");
 
-  // Logic Total (Amount) = (Sub + Ship + Serv + Add) - Disc
   const totalAmount = (subtotal + shipping + serviceFee + additionalFee) - discount;
 
   const categoryId = CATEGORY_IDS[categoryName];
   const platformId = PLATFORM_IDS[platformName];
 
   if (!name || totalAmount <= 0 || !categoryId) {
-    return { success: false, message: "Nama transaksi, kategori, dan total pengeluaran wajib diisi." };
+    return { success: false, message: "Nama, kategori, dan total wajib diisi." };
   }
 
   try {
     const properties: any = {
-      "Name": { title: [{ text: { content: name } }] },
-      "Date": { date: { start: dateStr || new Date().toISOString() } },
-      "Category": { relation: [{ id: categoryId }] },
+      Name: { title: [{ text: { content: name } }] },
+      Date: { date: { start: dateStr || new Date().toISOString() } },
+      Category: { relation: [{ id: categoryId }] },
       "Payment Method": { select: { name: paymentMethod } },
-      
-      // Angka-angka masuk ke Notion
-      "Amount": { number: totalAmount }, // Total Akhir
-      "Subtotal": { number: subtotal },
-      "Shipping": { number: shipping },
-      "Discount": { number: discount },
+      Amount: { number: totalAmount },
+      Subtotal: { number: subtotal },
+      Shipping: { number: shipping },
+      Discount: { number: discount },
       "Service Fee": { number: serviceFee },
-      "Additional Fee": { number: additionalFee },
+      "Additional Payment": { number: additionalFee }, // ✅ SESUAIKAN DENGAN NOTION
     };
 
     if (platformName && platformId) {
@@ -60,9 +55,9 @@ export async function addExpense(formData: FormData) {
     });
 
     revalidatePath("/");
-    return { success: true, message: "Pengeluaran berhasil disimpan." };
+    return { success: true, message: "Pengeluaran berhasil disimpan!" };
   } catch (error: any) {
-    console.error(JSON.stringify(error, null, 2));
+    console.error("Error:", error);
     return { success: false, message: error.message };
   }
 }
