@@ -121,6 +121,11 @@ export default function ExpenseForm() {
         <form
           ref={formRef}
           action={handleSubmit}
+          onSubmit={(e) => {
+            e.preventDefault();
+            setLoading(true);
+            handleSubmit(new FormData(e.currentTarget));
+          }}
           className="space-y-8 pb-20 sm:pb-0"
         >
           {/* 1. SECTION DUIT & NAMA (HERO) */}
@@ -334,7 +339,7 @@ export default function ExpenseForm() {
                 disabled={loading}
               >
                 {loading ? (
-                  "Menyimpann....."
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   "Simpan"
                 )}
