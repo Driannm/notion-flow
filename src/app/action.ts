@@ -1,4 +1,3 @@
-// src/app/actions.ts
 'use server'
 
 import { notion, DATABASE_ID } from "@/lib/notion";
@@ -32,7 +31,7 @@ export async function addExpense(formData: FormData) {
   const platformId = PLATFORM_IDS[platformName];
 
   if (!name || totalAmount <= 0 || !categoryId) {
-    return { success: false, message: "Nama, Harga, & Kategori wajib diisi!" };
+    return { success: false, message: "Nama transaksi, kategori, dan total pengeluaran wajib diisi." };
   }
 
   try {
@@ -61,7 +60,7 @@ export async function addExpense(formData: FormData) {
     });
 
     revalidatePath("/");
-    return { success: true, message: "Tersimpan! 🎉" };
+    return { success: true, message: "Pengeluaran berhasil disimpan." };
   } catch (error: any) {
     console.error(JSON.stringify(error, null, 2));
     return { success: false, message: error.message };

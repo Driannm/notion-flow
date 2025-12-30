@@ -16,20 +16,23 @@ import {
   ClipboardList,
   BadgeDollarSign,
   Coins,
-  MoreHorizontal
+  MoreHorizontal,
+  Clapperboard,
+  ShoppingBag
 } from "lucide-react";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const ICON_MAP: Record<string, any> = {
   "Household Items": Home,
   "Personal Care": User,
   "Groceries": ShoppingCart,
   "Utilities": ClipboardList,
   "Food & Drink": Utensils,
-  "Digital Recreation": Gamepad2,
+  "Digital Recreation": Clapperboard,
   "Hobbies & Recreation": Sparkles,
   "Transport": Car,
   "Savings": Coins,
-  "Shopping": ShoppingCart,
+  "Shopping": ShoppingBag,
   "Health & Wellness": HeartPulse,
   "Laundry Services": Shirt,
   "Google Services": Globe,
@@ -65,13 +68,50 @@ export const CATEGORY_IDS: Record<string, string> = {
   "Fitnes & Sport": "27c9ec9fc1ce80edb8bdc87411ac889a",
   "Education": "27c9ec9fc1ce8045b4a8c27f91f1847e",
   "Fashion & Accesories": "27c9ec9fc1ce8020ba30d56693969372",
-  "Miscellaneo": "27c9ec9fc1ce803286fdf9470e527e6b",
+  "Miscellaneous": "27c9ec9fc1ce803286fdf9470e527e6b",
   "Cash Withdrawals": "27c9ec9fc1ce80a2928be38ce4634fa3",
   "Work & Office Supplies": "27c9ec9fc1ce806e9e22dfa8cd0741fb",
   "Gift & Donations": "27d9ec9fc1ce80e19262e91d85643d73",
   "Vehicle Expenses": "27d9ec9fc1ce80acb3cfe3379f5587b6",
   "Taxes & Fee": "27d9ec9fc1ce80dd8ad4d7c4c73a1d18",
   "Digital Gaming Expenses": "27e9ec9fc1ce80a6a44cf44db2377746",
+};
+
+export const CATEGORY_GROUPS: Record<string, string[]> = {
+  "Kebutuhan Harian": [
+    "Groceries",
+    "Food & Drink",
+    "Personal Care",
+    "Household Items",
+    "Fashion & Accesories",
+  ],
+  "Tagihan & Layanan": [
+    "Utilities",
+    "Laundry Services",
+    "Education",
+    "Work & Office Supplies",
+    "Taxes & Fee",
+    "Health & Wellness",
+    "Fitnes & Sport",
+  ],
+  "Digital & Hiburan": [
+    "Digital Recreation",
+    "Game Items",
+    "Digital Gaming Expenses",
+    "Google Services",
+    "Hobbies & Recreation",
+  ],
+  "Transportasi": [
+    "Transport",
+    "Vehicle Expenses",
+  ],
+  "Keuangan & Lainnya": [
+    "Savings",
+    "Shopping",
+    "Cash Withdrawals",
+    "Gift & Donations",
+    "Miscellaneous",
+  ]
 };
 
 export const PLATFORM_IDS: Record<string, string> = {

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { addExpense } from "@/app/action"; // Sesuaikan path action lo
-import { PLATFORM_GROUPS, PAYMENT_GROUPS } from "@/lib/constants";
-import { CategoryGrid } from "@/components/expense/category-grid";
+import { CATEGORY_IDS, PLATFORM_GROUPS, PAYMENT_GROUPS } from "@/lib/constants";
+import { CategorySelect } from "@/components/expense/category-select";
 import { AmountInput } from "@/components/expense/amount-input";
 
 // ShadCN Imports
@@ -32,7 +32,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Loader2, CalendarIcon, Plus, Tag, Store, Wallet } from "lucide-react";
+import { Loader2, CalendarIcon, Tag, Store, Wallet } from "lucide-react";
 import toast from "react-hot-toast";
 import { format } from "date-fns";
 import { id } from "date-fns/locale"; // Biar tanggal bahasa indo
@@ -42,6 +42,8 @@ export default function ExpenseForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date());
+
+  // State Kategori
   const [selectedCategory, setSelectedCategory] = useState("");
 
   // State Angka
@@ -54,13 +56,14 @@ export default function ExpenseForm() {
   });
   const [total, setTotal] = useState(0);
 
-  // Kalkulasi Total
   useEffect(() => {
-    const sub = parseInt(values.subtotal) || 0;
-    const ship = parseInt(values.shipping) || 0;
-    const disc = parseInt(values.discount) || 0;
-    const serv = parseInt(values.serviceFee) || 0;
-    const add = parseInt(values.additionalFee) || 0;
+    // Hapus koma sebelum hitung preview total
+    const parse = (val: string) => parseInt(val.replace(/,/g, "")) || 0;
+    const sub = parse(values.subtotal);
+    const ship = parse(values.shipping);
+    const disc = parse(values.discount);
+    const serv = parse(values.serviceFee);
+    const add = parse(values.additionalFee);
     setTotal(sub + ship + serv + add - disc);
   }, [values]);
 
@@ -69,35 +72,47 @@ export default function ExpenseForm() {
   };
 
   async function handleSubmit(formData: FormData) {
-    if (!selectedCategory || !values.subtotal) {
-      toast.error("Isi nominal dan kategori dulu! 😡");
+    // 1. Validasi
+    const name = formData.get("name");
+    if (!name || !selectedCategory || !values.subtotal) {
+      toast.error("Nama, Kategori, dan Nominal wajib diisi!");
       return;
     }
 
-    setLoading(true);
-    formData.append("category", selectedCategory);
-    if (date) formData.append("date", date.toISOString());
+    setLoading(true); // START LOADING
 
-    const result = await addExpense(formData);
+    try {
+      formData.append("category", selectedCategory);
+      formData.set("subtotal", values.subtotal.replace(/,/g, ""));
+      if (values.shipping)
+        formData.set("shipping", values.shipping.replace(/,/g, ""));
+      // ... bersihkan field angka lain ...
 
-    if (result.success) {
-      toast.success(result.message, {
-        style: { borderRadius: "10px", background: "#333", color: "#fff" },
-      });
-      formRef.current?.reset();
-      setValues({
-        subtotal: "",
-        shipping: "",
-        discount: "",
-        serviceFee: "",
-        additionalFee: "",
-      });
-      setSelectedCategory("");
-      setTotal(0);
-    } else {
-      toast.error(result.message);
+      if (date) formData.append("date", date.toISOString());
+
+      const result = await addExpense(formData);
+
+      if (result.success) {
+        toast.success(result.message);
+        formRef.current?.reset();
+        setValues({
+          subtotal: "",
+          shipping: "",
+          discount: "",
+          serviceFee: "",
+          additionalFee: "",
+        });
+        setSelectedCategory("");
+        setTotal(0);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan sistem");
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
@@ -123,117 +138,112 @@ export default function ExpenseForm() {
             </div>
           </div>
 
-          {/* 2. SECTION KATEGORI (GRID) */}
-          <div className="space-y-3 px-4 sm:px-0">
+          {/* 2. SECTION KATEGORI */}
+          <div className="space-y-2 px-4">
             <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold pl-1">
               Kategori
             </Label>
-            <CategoryGrid
+            <CategorySelect
               value={selectedCategory}
               onChange={setSelectedCategory}
             />
           </div>
 
           {/* 3. SECTION DETAIL (TANGGAL & OPTIONAL) */}
-          <div className="bg-muted/30 rounded-3xl p-5 mx-4 sm:mx-0 space-y-4 border border-muted/50">
-            {/* Row Tanggal & Metode */}
-            <div className="space-y-1.5">
+          {/* Row Tanggal & Metode */}
+          <div className="space-y-1.5 px-4">
+            <Label className="text-xs text-muted-foreground ml-1">
+              Tanggal
+            </Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal h-11 bg-background border-border/50",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                  {date ? (
+                    format(date, "d MMM", { locale: id })
+                  ) : (
+                    <span>Pilih</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3">
+            <div className="space-y-1.5 px-4">
               <Label className="text-xs text-muted-foreground ml-1">
-                Tanggal
+                Pembayaran
               </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal h-11 bg-background border-border/50",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                    {date ? (
-                      format(date, "d MMM", { locale: id })
-                    ) : (
-                      <span>Pilih</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Select name="paymentMethod">
+                <SelectTrigger className="h-11 w-full bg-background border-border/50 justify-start text-left">
+                  <Wallet className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Pilih metode pembayaran" />
+                </SelectTrigger>
+
+                <SelectContent className="max-h-64">
+                  {Object.entries(PAYMENT_GROUPS).map(([groupName, items]) => (
+                    <SelectGroup key={groupName}>
+                      <SelectLabel className="text-xs text-muted-foreground">
+                        {groupName}
+                      </SelectLabel>
+
+                      {items.map((m) => (
+                        <SelectItem key={m} value={m}>
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground ml-1">
-                  Pembayaran
-                </Label>
-                <Select name="paymentMethod">
-                  <SelectTrigger className="h-11 bg-background border-border/50">
-                    <Wallet className="w-4 h-4 mr-2 text-muted-foreground" />
-                    <SelectValue placeholder="Pilih metode pembayaran" />
-                  </SelectTrigger>
+            {/* Row Platform */}
+            <div className="space-y-1.5 px-4">
+              <Label className="text-xs text-muted-foreground ml-1">
+                Beli di mana?
+              </Label>
+              <Select name="platform">
+                <SelectTrigger className="h-11 w-full bg-background border-border/50 justify-start text-left">
+                  <Store className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Pilih Toko/App (Opsional)" />
+                </SelectTrigger>
 
-                  <SelectContent className="max-h-64">
-                    {Object.entries(PAYMENT_GROUPS).map(
-                      ([groupName, items]) => (
-                        <SelectGroup key={groupName}>
-                          <SelectLabel className="text-xs text-muted-foreground">
-                            {groupName}
-                          </SelectLabel>
-
-                          {items.map((m) => (
-                            <SelectItem key={m} value={m}>
-                              {m}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Row Platform */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground ml-1">
-                  Beli di mana?
-                </Label>
-                <Select name="platform">
-                  <SelectTrigger className="h-11 bg-background border-border/50">
-                    <Store className="w-4 h-4 mr-2 text-muted-foreground" />
-                    <SelectValue placeholder="Pilih Toko/App (Opsional)" />
-                  </SelectTrigger>
-
-                  <SelectContent className="max-h-72">
-                    {" "}
-                    {/* biar scrollable */}
-                    <SelectItem value="none">-- Skip --</SelectItem>
-                    {Object.entries(PLATFORM_GROUPS).map(
-                      ([groupName, items]) => (
-                        <SelectGroup key={groupName}>
-                          <SelectLabel className="text-xs text-muted-foreground">
-                            {groupName}
-                          </SelectLabel>
-                          {items.map((p) => (
-                            <SelectItem key={p} value={p}>
-                              {p}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+                <SelectContent className="max-h-72">
+                  {" "}
+                  {/* biar scrollable */}
+                  <SelectItem value="none">-- Skip --</SelectItem>
+                  {Object.entries(PLATFORM_GROUPS).map(([groupName, items]) => (
+                    <SelectGroup key={groupName}>
+                      <SelectLabel className="text-xs text-muted-foreground">
+                        {groupName}
+                      </SelectLabel>
+                      {items.map((p) => (
+                        <SelectItem key={p} value={p}>
+                          {p}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-
+          </div>
+          <div className="rounded-3xl p-5 mx-4 sm:mx-0 space-y-4 px-4">
             {/* ACCORDION (BIAYA TAMBAHAN) */}
             <Accordion
               type="single"
@@ -324,7 +334,7 @@ export default function ExpenseForm() {
                 disabled={loading}
               >
                 {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  "Menyimpann....."
                 ) : (
                   "Simpan"
                 )}
