@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { notion, DATABASE_ID } from "@/lib/notion-server";

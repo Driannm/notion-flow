@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDown, ChevronLeft, ChevronUp, Upload, BanknoteArrowDown, Loader2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronUp,
+  Upload,
+  BanknoteArrowDown,
+  Loader2,
+} from "lucide-react";
 import { DatePicker } from "@/components/finance/expenses/date-picker";
 import { CategorySelect } from "@/components/finance/expenses/category-select";
 import { PlatformSelect } from "@/components/finance/expenses/platform-select";
@@ -14,7 +21,7 @@ import { ICON_MAP } from "@/lib/constants";
 import { Label } from "@/components/ui/label";
 
 // 👇 IMPORT SERVER ACTION (Sesuaikan path jika beda)
-import { addExpense } from "@/app/action/finance/addExpenses"; 
+import { addExpense } from "@/app/action/finance/addExpenses";
 
 type BreakdownField = {
   id: string;
@@ -39,7 +46,9 @@ export default function ExpenseForm() {
   const [receipt, setReceipt] = React.useState<File | null>(null);
   const [isBreakdownOpen, setIsBreakdownOpen] = React.useState(false);
 
-  const [breakdownFields, setBreakdownFields] = React.useState<BreakdownField[]>([
+  const [breakdownFields, setBreakdownFields] = React.useState<
+    BreakdownField[]
+  >([
     { id: "shipping", label: "Shipping", value: "" },
     { id: "discount", label: "Discount", value: "" },
     { id: "serviceFee", label: "Service Fee", value: "" },
@@ -81,7 +90,10 @@ export default function ExpenseForm() {
       // 1. Bungkus data ke dalam FormData
       const formData = new FormData();
       formData.append("name", title);
-      formData.append("date", date ? date.toISOString() : new Date().toISOString());
+      formData.append(
+        "date",
+        date ? date.toISOString() : new Date().toISOString()
+      );
       formData.append("category", category);
       formData.append("platform", platform);
       formData.append("paymentMethod", paymentMethod);
@@ -90,7 +102,7 @@ export default function ExpenseForm() {
       // Masukkan breakdown fields (shipping, discount, dll)
       breakdownFields.forEach((field) => {
         if (field.value) {
-            formData.append(field.id, field.value);
+          formData.append(field.id, field.value);
         }
       });
 
@@ -145,7 +157,10 @@ export default function ExpenseForm() {
         <div className="w-14 h-14 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
           {(() => {
             // Gunakan logic element React untuk Icon Map
-            const IconComp = category && ICON_MAP[category] ? ICON_MAP[category] : BanknoteArrowDown;
+            const IconComp =
+              category && ICON_MAP[category]
+                ? ICON_MAP[category]
+                : BanknoteArrowDown;
             return <IconComp className="text-red-500" size={28} />;
           })()}
         </div>
@@ -162,7 +177,7 @@ export default function ExpenseForm() {
               })
             : "Today"}
         </div>
-        <div className="text-center text-3xl font-bold text-red-600">
+        <div className="text-center text-3xl font-bold">
           {formatCurrency(totalAmount).replace("Rp", "Rp ")}
         </div>
       </div>
@@ -173,7 +188,7 @@ export default function ExpenseForm() {
         onValueChange={setActiveTab}
         className="flex-1 flex flex-col"
       >
-        <TabsList className="mx-4 bg-muted mt-2 w-89 xl:w-105">
+        <TabsList className="mx-4 bg-muted mt-2 w-96 xl:w-105">
           <TabsTrigger value="info" className="flex-1">
             Informations
           </TabsTrigger>
@@ -205,19 +220,22 @@ export default function ExpenseForm() {
             </div>
 
             <div className="space-y-1.5">
-                <label className="text-sm font-medium">Category</label>
-                <CategorySelect value={category} onChange={setCategory} />
-              </div>
+              <label className="text-sm font-medium">Category</label>
+              <CategorySelect value={category} onChange={setCategory} />
+            </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Platform / Store</label>
-                <PlatformSelect value={platform} onChange={setPlatform} />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Platform / Store</label>
+              <PlatformSelect value={platform} onChange={setPlatform} />
+            </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Payment Method</label>
-                <PaymentSelect value={paymentMethod} onChange={setPaymentMethod} />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Payment Method</label>
+              <PaymentSelect
+                value={paymentMethod}
+                onChange={setPaymentMethod}
+              />
+            </div>
           </div>
         </TabsContent>
 
@@ -294,13 +312,17 @@ export default function ExpenseForm() {
       {/* Actions */}
       <div className="p-4 border-t border-border bg-background/80 backdrop-blur-md sticky bottom-0">
         <Button
-          className="w-full bg-red-600 hover:bg-red-700 text-white"
+          className="w-full"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-              <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={16} /> Saving...</span>
-          ) : "Submit Expense"}
+            <span className="flex items-center gap-2">
+              <Loader2 className="animate-spin" size={16} /> Saving...
+            </span>
+          ) : (
+            "Submit Expense"
+          )}
         </Button>
       </div>
     </div>

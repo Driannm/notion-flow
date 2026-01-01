@@ -27,7 +27,10 @@ interface Props {
   totalExpense: number;
 }
 
-export default function ExpensesClientView({ initialData, totalExpense }: Props) {
+export default function ExpensesClientView({
+  initialData,
+  totalExpense,
+}: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = React.useState("All");
 
@@ -46,7 +49,10 @@ export default function ExpensesClientView({ initialData, totalExpense }: Props)
     }).format(value);
 
   // 1. Generate Unique Categories dari Data untuk Filter Tabs
-  const categories = ["All", ...Array.from(new Set(initialData.map((t) => t.category)))];
+  const categories = [
+    "All",
+    ...Array.from(new Set(initialData.map((t) => t.category))),
+  ];
 
   // 2. Filter Logic
   const filteredTransactions =
@@ -59,7 +65,7 @@ export default function ExpensesClientView({ initialData, totalExpense }: Props)
   const weeklyChartData = React.useMemo(() => {
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const stats = days.map((day) => ({ day, amount: 0, active: false }));
-    
+
     const today = new Date();
     const currentDayIndex = today.getDay(); // 0 = Sunday
     stats[currentDayIndex].active = true;
@@ -79,9 +85,12 @@ export default function ExpensesClientView({ initialData, totalExpense }: Props)
     // Normalisasi tinggi bar (max height logic)
     const maxVal = Math.max(...stats.map((s) => s.amount), 1); // avoid div by 0
     return stats.map((s) => ({
-        ...s,
-        heightClass: `h-[${Math.max(Math.round((s.amount / maxVal) * 100), 10)}%]`, // Tailwind dynamic value limitation workaround below
-        heightPercent: Math.max(Math.round((s.amount / maxVal) * 100), 10) // Use inline style for height
+      ...s,
+      heightClass: `h-[${Math.max(
+        Math.round((s.amount / maxVal) * 100),
+        10
+      )}%]`, // Tailwind dynamic value limitation workaround below
+      heightPercent: Math.max(Math.round((s.amount / maxVal) * 100), 10), // Use inline style for height
     }));
   }, [initialData]);
 
@@ -90,7 +99,12 @@ export default function ExpensesClientView({ initialData, totalExpense }: Props)
       {/* Header */}
       <div className="px-4 py-4 border-b border-border sticky top-0 bg-background/80 backdrop-blur-md z-10">
         <div className="flex items-center justify-between">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="-ml-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            className="-ml-2"
+          >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="font-semibold text-lg">Expenses</div>
@@ -105,16 +119,49 @@ export default function ExpensesClientView({ initialData, totalExpense }: Props)
         <div className="p-4">
           <div className="p-6 rounded-2xl bg-gradient-to-br from-red-600 to-red-700 text-white shadow-lg">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-red-100 text-sm font-medium">Total Spending (Month)</span>
+              <span className="text-red-100 text-sm font-medium">
+                Total Spending (Month)
+              </span>
               <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full text-xs text-white backdrop-blur-sm">
                 <Calendar className="w-3 h-3" />
-                <span>{currentMonthFormatted}</span> 
+                <span>{currentMonthFormatted}</span>
               </div>
             </div>
-            <div className="text-3xl font-bold mb-2">{formatCurrency(totalExpense)}</div>
-            <div className="text-xs text-red-100/80">
-              Based on Notion Data
+            <div className="text-3xl font-bold mb-2">
+              {formatCurrency(totalExpense)}
             </div>
+            <div className="text-xs text-red-100/80">Based on Notion Data</div>
+
+            {/* Quick Stats */}
+            {/* <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-border/50">
+              <div>
+                <div className="text-xs text-white mb-1">
+                  Biggest
+                </div>
+                <div className="text-sm font-semibold text-white">
+                  {formatCurrency(stats.totalIncome).replace("Rp", "")}
+                  20000
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-white mb-1">
+                  Smalles
+                </div>
+                <div className="text-sm font-semibold text-white">
+                  {formatCurrency(stats.totalExpenses).replace("Rp", "")}
+                  20000
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-white mb-1">
+                  Avarage
+                </div>
+                <div className="text-sm font-semibold text-white">
+                  {formatCurrency(stats.totalDebts).replace("Rp", "")}
+                  20000
+                </div>
+              </div>
+            </div> */}
           </div>
         </div>
 
@@ -122,23 +169,30 @@ export default function ExpensesClientView({ initialData, totalExpense }: Props)
         <div className="px-4 mb-6">
           <div className="flex items-end justify-between gap-2 h-40 p-4 border border-border rounded-xl bg-card">
             {weeklyChartData.map((stat, idx) => (
-              <div key={idx} className="flex flex-col items-center gap-2 flex-1 h-full justify-end">
-                 {/* Bar */}
+              <div
+                key={idx}
+                className="flex flex-col items-center gap-2 flex-1 h-full justify-end"
+              >
+                {/* Bar */}
                 <div className="w-full relative group h-full flex items-end justify-center">
-                    {/* Tooltip */}
-                    {stat.amount > 0 && (
-                        <div className="hidden group-hover:block absolute -top-8 bg-popover text-popover-foreground text-[10px] px-2 py-1 rounded shadow z-20 whitespace-nowrap">
-                            {formatCurrency(stat.amount)}
-                        </div>
-                    )}
+                  {/* Tooltip */}
+                  {stat.amount > 0 && (
+                    <div className="hidden group-hover:block absolute -top-8 bg-popover text-popover-foreground text-[10px] px-2 py-1 rounded shadow z-20 whitespace-nowrap">
+                      {formatCurrency(stat.amount)}
+                    </div>
+                  )}
                   <div
                     style={{ height: `${stat.heightPercent}%` }}
                     className={`w-full rounded-t-sm transition-all duration-500 min-h-[4px] ${
-                      stat.active ? "bg-red-500" : "bg-red-200 dark:bg-red-900/30"
+                      stat.active
+                        ? "bg-red-500"
+                        : "bg-red-200 dark:bg-red-900/30"
                     }`}
                   ></div>
                 </div>
-                <span className="text-xs text-muted-foreground">{stat.day}</span>
+                <span className="text-xs text-muted-foreground">
+                  {stat.day}
+                </span>
               </div>
             ))}
           </div>
@@ -170,24 +224,27 @@ export default function ExpensesClientView({ initialData, totalExpense }: Props)
         <div className="px-4 mt-2">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-sm">Recent Transactions</h3>
-            <span className="text-xs text-muted-foreground">{filteredTransactions.length} items</span>
+            <span className="text-xs text-muted-foreground">
+              {filteredTransactions.length} items
+            </span>
           </div>
 
           <div className="space-y-3">
             {filteredTransactions.map((item) => {
               // Get Icon from Map based on Category Name
-              const IconComponent = ICON_MAP[item.category] || ICON_MAP["default"];
-              
+              const IconComponent =
+                ICON_MAP[item.category] || ICON_MAP["default"];
+
               return (
                 <div
                   key={item.id}
-                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent transition-colors border border-transparent hover:border-border cursor-pointer"
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:bg-accent transition-colors"
                 >
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-red-500/10 text-red-500">
                     <IconComponent className="w-5 h-5" />
                   </div>
 
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 ">
                     <div className="flex items-center justify-between mb-0.5">
                       <h4 className="font-semibold text-sm truncate pr-2">
                         {item.title}
@@ -198,9 +255,11 @@ export default function ExpensesClientView({ initialData, totalExpense }: Props)
                     </div>
                     <div className="flex items-center justify-between">
                       <p className="text-xs text-muted-foreground">
-                        {item.category} • {item.paymentMethod}
+                        {item.paymentMethod}
                       </p>
-                      <p className="text-xs text-muted-foreground">{item.date}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.date}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -208,9 +267,9 @@ export default function ExpensesClientView({ initialData, totalExpense }: Props)
             })}
 
             {filteredTransactions.length === 0 && (
-                <div className="text-center py-10 text-muted-foreground text-sm">
-                    No transactions found.
-                </div>
+              <div className="text-center py-10 text-muted-foreground text-sm">
+                No transactions found.
+              </div>
             )}
           </div>
         </div>
@@ -218,11 +277,11 @@ export default function ExpensesClientView({ initialData, totalExpense }: Props)
 
       {/* FAB */}
       <div className="fixed bottom-6 right-1/2 translate-x-1/2 max-w-md w-full px-4 flex justify-end pointer-events-none">
-        <Button 
-            className="h-14 w-14 rounded-full shadow-xl bg-red-600 hover:bg-red-700 pointer-events-auto"
-            onClick={() => router.push('/finance/expenses/add')}
+        <Button
+          className="h-14 w-14 rounded-full shadow-xl bg-red-600 hover:bg-red-700 pointer-events-auto"
+          onClick={() => router.push("/finance/expenses/add")}
         >
-            <Plus className="w-6 h-6 text-white" />
+          <Plus className="w-6 h-6 text-white" />
         </Button>
       </div>
     </div>
