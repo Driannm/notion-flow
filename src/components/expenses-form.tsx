@@ -1,98 +1,97 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { addExpense } from "@/app/action";
-
-import { CATEGORY_IDS, PLATFORM_GROUPS, PAYMENT_GROUPS } from "@/lib/constants";
-
-import { CategorySelect } from "@/components/expense/category-select";
-import { AmountInput } from "@/components/expense/amount-input";
-
-// shadcn/ui
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent } from "@/components/ui/card";
+import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
+  ChevronDown,
+  ChevronUp,
+  Upload,
+  Loader2,
+  BanknoteArrowDown,
+  ChevronLeft,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-
-// icons & utils
-import { CalendarIcon, Tag, Store, Wallet, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { format } from "date-fns";
-import { id } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { addExpense } from "@/app/action";
+import { ICON_MAP } from "@/lib/constants";
+
+// Custom components
+import { DatePicker } from "@/components/expense/date-picker";
+import { CategorySelect } from "@/components/expense/category-select";
+import { PlatformSelect } from "@/components/expense/platform-select";
+import { PaymentSelect } from "@/components/expense/payment-select";
+
+type BreakdownField = {
+  id: string;
+  label: string;
+  value: string;
+};
 
 export default function ExpenseForm() {
-  // ref
-  const formRef = useRef<HTMLFormElement>(null);
+  // Refs
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const formRef = React.useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
-  // ui states
-  const [loading, setLoading] = useState(false);
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  // UI States
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState("info");
+  const [isBreakdownOpen, setIsBreakdownOpen] = React.useState(false);
 
-  // template state
+  // Template State
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [templates, setTemplates] = useState<any[]>([]);
+  const [templates, setTemplates] = React.useState<any[]>([]);
 
-  // 🆕 state untuk name
-  const [name, setName] = useState("");
+  // Info States
+  const [title, setTitle] = React.useState("");
+  const [category, setCategory] = React.useState("");
+  const [platform, setPlatform] = React.useState("");
+  const [paymentMethod, setPaymentMethod] = React.useState("");
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
 
-  // select states
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [platform, setPlatform] = useState("");
+  // Proof States
+  const [subtotal, setSubtotal] = React.useState("");
+  const [receipt, setReceipt] = React.useState<File | null>(null);
 
-  // numeric inputs
-  const [values, setValues] = useState({
-    subtotal: "",
-    shipping: "",
-    discount: "",
-    serviceFee: "",
-    additionalFee: "",
-  });
+  const [breakdownFields, setBreakdownFields] = React.useState<
+    BreakdownField[]
+  >([
+    { id: "shipping", label: "Shipping", value: "" },
+    { id: "discount", label: "Discount", value: "" },
+    { id: "serviceFee", label: "Service Fee", value: "" },
+    { id: "additionalFee", label: "Additional Fee", value: "" },
+  ]);
 
-  // preview total
-  const [total, setTotal] = useState(0);
+  // Calculate Total Amount
+  const totalAmount = React.useMemo(() => {
+    const base = parseFloat(subtotal) || 0;
+    const extra = breakdownFields.reduce((sum, f) => {
+      const val = parseFloat(f.value) || 0;
+      return f.id === "discount" ? sum - val : sum + val;
+    }, 0);
+    return base + extra;
+  }, [subtotal, breakdownFields]);
 
-  // ========================
-  // EFFECTS
-  // ========================
+  // Format Currency
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }).format(value);
 
-  // hitung total preview
-  useEffect(() => {
-    const parse = (val: string) => parseInt(val.replace(/,/g, "")) || 0;
-
-    const sub = parse(values.subtotal);
-    const ship = parse(values.shipping);
-    const disc = parse(values.discount);
-    const serv = parse(values.serviceFee);
-    const add = parse(values.additionalFee);
-
-    setTotal(sub + ship + serv + add - disc);
-  }, [values]);
-
-  // fetch templates
-  useEffect(() => {
+  // Fetch Templates on Mount
+  React.useEffect(() => {
     async function loadTemplates() {
       try {
         const res = await fetch("/api/templates");
@@ -110,92 +109,115 @@ export default function ExpenseForm() {
         setTemplates(data);
       } catch (err) {
         console.error("Failed to load templates", err);
-        setTemplates([]); // fallback aman
+        setTemplates([]);
       }
     }
 
     loadTemplates();
   }, []);
 
-  // ========================
-  // HANDLERS
-  // ========================
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValues({
-      ...values,
-      [e.target.name]: e.target.value,
-    });
+  // Update Breakdown Field
+  const updateBreakdownField = (id: string, value: string) => {
+    setBreakdownFields((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, value } : f))
+    );
   };
 
-  // 🆕 Update handler untuk template - ISI SEMUA FIELD
-  function handleTemplateSelect(id: string) {
-    const t = templates.find((x) => x.id === id);
+  // Handle Template Selection
+  function handleTemplateSelect(templateId: string) {
+    const t = templates.find((x) => x.id === templateId);
     if (!t) return;
 
-    // Set name
-    setName(t.name ?? "");
-
-    // Set amounts
-    setValues({
-      subtotal: String(t.subtotal ?? ""),
-      shipping: String(t.shipping ?? ""),
-      discount: String(t.discount ?? ""),
-      serviceFee: String(t.serviceFee ?? ""),
-      additionalFee: String(t.additionalFee ?? ""),
-    });
-
-    // Set selects
-    setSelectedCategory(t.category ?? "");
+    // Set basic info
+    setTitle(t.name ?? "");
+    setCategory(t.category ?? "");
     setPaymentMethod(t.paymentMethod ?? "");
     setPlatform(t.platform ?? "");
+
+    // Set subtotal
+    setSubtotal(String(t.subtotal ?? ""));
+
+    // Set breakdown fields
+    setBreakdownFields([
+      { id: "shipping", label: "Shipping", value: String(t.shipping ?? "") },
+      { id: "discount", label: "Discount", value: String(t.discount ?? "") },
+      {
+        id: "serviceFee",
+        label: "Service Fee",
+        value: String(t.serviceFee ?? ""),
+      },
+      {
+        id: "additionalFee",
+        label: "Additional Fee",
+        value: String(t.additionalFee ?? ""),
+      },
+    ]);
+
+    // Auto switch to info tab
+    setActiveTab("info");
   }
 
-  async function handleSubmit(formData: FormData) {
-    const nameValue = formData.get("name");
-
-    if (!nameValue || !selectedCategory || !values.subtotal) {
+  // Handle Submit
+  const handleSubmit = async () => {
+    // Validation
+    if (!title || !category || !subtotal) {
       toast.error("Nama, Kategori, dan Nominal wajib diisi!");
       return;
     }
 
-    setLoading(true);
+    setIsSubmitting(true);
 
     try {
-      formData.append("category", selectedCategory);
-      formData.set("subtotal", values.subtotal.replace(/,/g, ""));
+      const formData = new FormData();
 
-      if (values.shipping)
-        formData.set("shipping", values.shipping.replace(/,/g, ""));
-      if (values.discount)
-        formData.set("discount", values.discount.replace(/,/g, ""));
-      if (values.serviceFee)
-        formData.set("serviceFee", values.serviceFee.replace(/,/g, ""));
-      if (values.additionalFee)
-        formData.set("additionalFee", values.additionalFee.replace(/,/g, ""));
+      // Required fields
+      formData.append("name", title);
+      formData.append("category", category);
+      formData.append("subtotal", subtotal.replace(/,/g, ""));
 
+      // Optional fields
       if (date) formData.append("date", date.toISOString());
+      if (paymentMethod) formData.append("paymentMethod", paymentMethod);
+      if (platform && platform !== "none")
+        formData.append("platform", platform);
+
+      // Breakdown fields
+      const shipping = breakdownFields.find((f) => f.id === "shipping")?.value;
+      const discount = breakdownFields.find((f) => f.id === "discount")?.value;
+      const serviceFee = breakdownFields.find(
+        (f) => f.id === "serviceFee"
+      )?.value;
+      const additionalFee = breakdownFields.find(
+        (f) => f.id === "additionalFee"
+      )?.value;
+
+      if (shipping) formData.append("shipping", shipping.replace(/,/g, ""));
+      if (discount) formData.append("discount", discount.replace(/,/g, ""));
+      if (serviceFee)
+        formData.append("serviceFee", serviceFee.replace(/,/g, ""));
+      if (additionalFee)
+        formData.append("additionalFee", additionalFee.replace(/,/g, ""));
 
       const result = await addExpense(formData);
 
       if (result.success) {
         toast.success(result.message);
-        formRef.current?.reset();
-        
-        // 🆕 Reset name juga
-        setName("");
-        
-        setValues({
-          subtotal: "",
-          shipping: "",
-          discount: "",
-          serviceFee: "",
-          additionalFee: "",
-        });
-        setSelectedCategory("");
-        setPaymentMethod("");
+
+        // Reset form
+        setTitle("");
+        setCategory("");
         setPlatform("");
-        setTotal(0);
+        setPaymentMethod("");
+        setSubtotal("");
+        setReceipt(null);
+        setBreakdownFields([
+          { id: "shipping", label: "Shipping", value: "" },
+          { id: "discount", label: "Discount", value: "" },
+          { id: "serviceFee", label: "Service Fee", value: "" },
+          { id: "additionalFee", label: "Additional Fee", value: "" },
+        ]);
+        setDate(new Date());
+        setActiveTab("info");
       } else {
         toast.error(result.message);
       }
@@ -203,268 +225,224 @@ export default function ExpenseForm() {
       toast.error("Terjadi kesalahan sistem");
       console.error(error);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
-    <Card className="w-full max-w-lg border-0 shadow-none sm:shadow-xl sm:border sm:bg-card/50 sm:backdrop-blur-xl">
-      <CardContent className="p-0 sm:p-6">
-        <form
-          ref={formRef}
-          action={handleSubmit}
-          onSubmit={(e) => {
-            e.preventDefault();
-            setLoading(true);
-            handleSubmit(new FormData(e.currentTarget));
-          }}
-          className="space-y-8 pb-20 sm:pb-0"
+    <div
+      className="w-full max-w-md min-h-screen mx-auto flex flex-col relative overflow-hidden shadow-2xl
+      bg-background text-foreground"
+    >
+      {/* Header */}
+      {/* <div className="px-4 py-4 border-b border-border flex items-center gap-2 text-sm text-muted-foreground">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="flex items-center gap-1 hover:text-primary transition"
         >
-          <Select onValueChange={handleTemplateSelect}>
-            <SelectTrigger className="h-11 w-full justify-start">
-              <SelectValue placeholder="Pakai template (opsional)" />
-            </SelectTrigger>
+          <ChevronLeft size={16} />
+          Back
+        </button>
+      </div> */}
 
-            <SelectContent>
-              {templates.map((t) => (
-                <SelectItem key={t.id} value={t.id}>
-                  Template • {t.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Summary Card */}
+      <div className="m-4 p-6 rounded-xl border border-border shadow bg-card">
+        <h1 className="text-2xl font-semibold mb-2">Add Expenses</h1>
+        <p className="text-xs text-muted-foreground mb-6">
+          Track your spending efficiently and make informed financial decisions.
+        </p>
 
-          {/* 1. SECTION DUIT & NAMA (HERO) */}
-          <div className="space-y-4 px-4 pt-4 sm:px-0 sm:pt-0">
-            <AmountInput value={values.subtotal} onChange={handleChange} />
+        <div className="w-14 h-14 dark:bg-blue-200 bg-blue-300 rounded-xl flex items-center justify-center mx-auto mb-4">
+          {(() => {
+            const Icon = category
+              ? ICON_MAP[category] || ICON_MAP.default
+              : BanknoteArrowDown;
+            return <Icon className="text-primary-foreground" size={28} />;
+          })()}
+        </div>
 
-            {/* 🆕 Input name dengan value dan onChange */}
-            <div className="grid grid-cols-1 gap-4">
+        <div className="text-center font-semibold">
+          {title || "Expense Title"}
+        </div>
+        <div className="text-center text-sm text-muted-foreground mb-2">
+          {date
+            ? date.toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })
+            : "Today"}
+        </div>
+        <div className="text-center text-3xl font-bold">
+          {formatCurrency(totalAmount)}
+        </div>
+      </div>
+
+      {/* Template Selection */}
+      <div className="mx-4 mb-2">
+        <Select onValueChange={handleTemplateSelect}>
+          <SelectTrigger className="h-11 w-full justify-start">
+            <SelectValue placeholder="Pakai template (opsional)" />
+          </SelectTrigger>
+          <SelectContent>
+            {templates.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                Template • {t.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Tabs */}
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="flex-1 flex flex-col"
+      >
+        <TabsList className="mx-4 bg-muted mt-2 w-90 xl:w-105">
+          <TabsTrigger value="info" className="flex-1">
+            Informations
+          </TabsTrigger>
+          <TabsTrigger value="proof" className="flex-1">
+            Expense Details
+          </TabsTrigger>
+        </TabsList>
+
+        {/* INFO TAB */}
+        <TabsContent
+          value="info"
+          className="m-4 mt-0 p-6 rounded-xl border border-border bg-card"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Name of expense</label>
               <Input
-                name="name"
-                placeholder="Buat beli apa? (e.g. Nasi Padang)"
-                className="h-12 bg-muted/30 border-muted focus-visible:ring-primary/20 text-lg"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Kopi Kenangan"
                 required
-                autoComplete="off"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground ml-1">
+                Tanggal
+              </Label>
+              <DatePicker date={date} onChange={setDate} />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Category</label>
+              <CategorySelect value={category} onChange={setCategory} />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Platform</label>
+              <PlatformSelect value={platform} onChange={setPlatform} />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Payment Method</label>
+              <PaymentSelect
+                value={paymentMethod}
+                onChange={setPaymentMethod}
               />
             </div>
           </div>
+        </TabsContent>
 
-          {/* 2. SECTION KATEGORI */}
-          <div className="space-y-2 px-4">
-            <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold pl-1">
-              Kategori
-            </Label>
-            <CategorySelect
-              value={selectedCategory}
-              onChange={setSelectedCategory}
-            />
-          </div>
-
-          {/* 3. SECTION DETAIL (TANGGAL & OPTIONAL) */}
-          {/* Row Tanggal & Metode */}
-          <div className="space-y-1.5 px-4">
-            <Label className="text-xs text-muted-foreground ml-1">
-              Tanggal
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal h-11 bg-background border-border/50",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                  {date ? (
-                    format(date, "d MMM", { locale: id })
-                  ) : (
-                    <span>Pilih</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3">
-            {/* 🆕 Payment Method dengan value dan onValueChange */}
-            <div className="space-y-1.5 px-4">
-              <Label className="text-xs text-muted-foreground ml-1">
-                Pembayaran
-              </Label>
-              <Select 
-                name="paymentMethod" 
-                value={paymentMethod}
-                onValueChange={setPaymentMethod}
-              >
-                <SelectTrigger className="h-11 w-full bg-background border-border/50 justify-start text-left">
-                  <Wallet className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Pilih metode pembayaran" />
-                </SelectTrigger>
-
-                <SelectContent className="max-h-64">
-                  {Object.entries(PAYMENT_GROUPS).map(([groupName, items]) => (
-                    <SelectGroup key={groupName}>
-                      <SelectLabel className="text-xs text-muted-foreground">
-                        {groupName}
-                      </SelectLabel>
-
-                      {items.map((m) => (
-                        <SelectItem key={m} value={m}>
-                          {m}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
+        {/* PROOF TAB */}
+        <TabsContent
+          value="proof"
+          className="m-4 mt-0 p-6 rounded-xl border border-border bg-card"
+        >
+          <div className="space-y-4">
+            {/* Subtotal */}
+            <div>
+              <label className="text-sm font-medium">Subtotal</label>
+              <Input
+                type="number"
+                value={subtotal}
+                onChange={(e) => setSubtotal(e.target.value)}
+                placeholder="0"
+                required
+              />
             </div>
 
-            {/* 🆕 Platform dengan value dan onValueChange */}
-            <div className="space-y-1.5 px-4">
-              <Label className="text-xs text-muted-foreground ml-1">
-                Beli di mana?
-              </Label>
-              <Select 
-                name="platform"
-                value={platform}
-                onValueChange={setPlatform}
-              >
-                <SelectTrigger className="h-11 w-full bg-background border-border/50 justify-start text-left">
-                  <Store className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <SelectValue placeholder="Pilih Toko/App (Opsional)" />
-                </SelectTrigger>
-
-                <SelectContent className="max-h-72">
-                  <SelectItem value="none">-- Skip --</SelectItem>
-                  {Object.entries(PLATFORM_GROUPS).map(([groupName, items]) => (
-                    <SelectGroup key={groupName}>
-                      <SelectLabel className="text-xs text-muted-foreground">
-                        {groupName}
-                      </SelectLabel>
-                      {items.map((p) => (
-                        <SelectItem key={p} value={p}>
-                          {p}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="rounded-3xl p-5 mx-4 sm:mx-0 space-y-4 px-4">
-            {/* ACCORDION (BIAYA TAMBAHAN) */}
-            <Accordion
-              type="single"
-              collapsible
-              className="w-full border-t border-dashed border-muted-foreground/20 pt-2"
-            >
-              <AccordionItem value="details" className="border-0">
-                <AccordionTrigger className="py-2 text-sm font-medium text-muted-foreground hover:text-primary">
-                  <span className="flex items-center gap-2">
-                    <Tag className="w-4 h-4" /> Tambah Ongkir / Diskon?
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="pt-2 pb-2">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-[10px] uppercase">Shipping</Label>
-                      <Input
-                        name="shipping"
-                        type="number"
-                        inputMode="numeric"
-                        placeholder="0"
-                        className="h-9 bg-background"
-                        value={values.shipping}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[10px] uppercase text-green-600">
-                        Discount
-                      </Label>
-                      <Input
-                        name="discount"
-                        type="number"
-                        inputMode="numeric"
-                        placeholder="0"
-                        className="h-9 bg-background border-green-200 focus-visible:ring-green-500"
-                        value={values.discount}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[10px] uppercase">
-                        Service Fee
-                      </Label>
-                      <Input
-                        name="serviceFee"
-                        type="number"
-                        inputMode="numeric"
-                        placeholder="0"
-                        className="h-9 bg-background"
-                        value={values.serviceFee}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className="text-[10px] uppercase">Extra Fee</Label>
-                      <Input
-                        name="additionalFee"
-                        type="number"
-                        inputMode="numeric"
-                        placeholder="0"
-                        className="h-9 bg-background"
-                        value={values.additionalFee}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
-
-          {/* 4. FLOATING BOTTOM BAR (MOBILE FIRST) */}
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t sm:relative sm:border-0 sm:bg-transparent sm:p-0 z-50">
-            <div className="max-w-lg mx-auto flex gap-4 items-center">
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground font-medium">
-                  Total Estimasi
-                </p>
-                <p className="text-xl font-bold text-primary truncate">
-                  Rp {total.toLocaleString("id-ID")}
-                </p>
-              </div>
+            {/* Expense Breakdown */}
+            <div>
               <Button
-                type="submit"
-                size="lg"
-                className="rounded-xl px-8 shadow-lg shadow-primary/20"
-                disabled={loading}
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => setIsBreakdownOpen((v) => !v)}
+                type="button"
               >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                Expense breakdown
+                {isBreakdownOpen ? (
+                  <ChevronUp size={16} />
                 ) : (
-                  "Simpan"
+                  <ChevronDown size={16} />
                 )}
               </Button>
+
+              {isBreakdownOpen && (
+                <div className="mt-4 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {breakdownFields.map((field) => (
+                      <div key={field.id}>
+                        <label className="text-xs font-medium text-muted-foreground">
+                          {field.label}
+                        </label>
+                        <Input
+                          type="number"
+                          value={field.value}
+                          onChange={(e) =>
+                            updateBreakdownField(field.id, e.target.value)
+                          }
+                          placeholder="0"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <label
+                    className="flex items-center justify-center gap-2 rounded-lg p-4 cursor-pointer text-sm
+                      border-2 border-dashed border-border text-muted-foreground hover:bg-muted transition"
+                  >
+                    <Upload size={18} />
+                    {receipt ? receipt.name : "Upload receipt"}
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => setReceipt(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                </div>
+              )}
             </div>
           </div>
-        </form>
-      </CardContent>
-    </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Actions */}
+      <div className="p-4 border-t border-border">
+        <Button
+          className="w-full"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Submitting...
+            </>
+          ) : (
+            "Submit expense"
+          )}
+        </Button>
+      </div>
+    </div>
   );
 }
