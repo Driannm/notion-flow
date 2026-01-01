@@ -1,35 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import {
-  ChevronDown,
-  ChevronUp,
-  Upload,
-  Loader2,
-  BanknoteArrowDown,
-  ChevronLeft,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import toast from "react-hot-toast";
-import { addExpense } from "@/app/action/finance/addExpenses";
-import { ICON_MAP } from "@/lib/constants";
-
-// Custom components
+import { ChevronDown, ChevronLeft, ChevronUp, Upload, BanknoteArrowDown } from "lucide-react";
 import { DatePicker } from "@/components/finance/expenses/date-picker";
 import { CategorySelect } from "@/components/finance/expenses/category-select";
 import { PlatformSelect } from "@/components/finance/expenses/platform-select";
 import { PaymentSelect } from "@/components/finance/expenses/payment-select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  ICON_MAP,
+} from "@/lib/constants";
+import { Label } from "@/components/ui/label";
 
 type BreakdownField = {
   id: string;
@@ -38,41 +22,29 @@ type BreakdownField = {
 };
 
 export default function ExpenseForm() {
-  // Refs
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const formRef = React.useRef<HTMLFormElement>(null);
-  const router = useRouter();
-
-  // UI States
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("info");
-  const [isBreakdownOpen, setIsBreakdownOpen] = React.useState(false);
+  const router = useRouter();
 
-  // Template State
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [templates, setTemplates] = React.useState<any[]>([]);
-
-  // Info States
+  // Info State
   const [title, setTitle] = React.useState("");
   const [category, setCategory] = React.useState("");
   const [platform, setPlatform] = React.useState("");
   const [paymentMethod, setPaymentMethod] = React.useState("");
   const [date, setDate] = React.useState<Date | undefined>(new Date());
 
-  // Proof States
+  // Proof State
   const [subtotal, setSubtotal] = React.useState("");
   const [receipt, setReceipt] = React.useState<File | null>(null);
+  const [isBreakdownOpen, setIsBreakdownOpen] = React.useState(false);
 
-  const [breakdownFields, setBreakdownFields] = React.useState<
-    BreakdownField[]
-  >([
+  const [breakdownFields, setBreakdownFields] = React.useState<BreakdownField[]>([
     { id: "shipping", label: "Shipping", value: "" },
     { id: "discount", label: "Discount", value: "" },
     { id: "serviceFee", label: "Service Fee", value: "" },
     { id: "additionalFee", label: "Additional Fee", value: "" },
   ]);
 
-  // Calculate Total Amount
   const totalAmount = React.useMemo(() => {
     const base = parseFloat(subtotal) || 0;
     const extra = breakdownFields.reduce((sum, f) => {
@@ -82,7 +54,6 @@ export default function ExpenseForm() {
     return base + extra;
   }, [subtotal, breakdownFields]);
 
-  // Format Currency
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -90,143 +61,31 @@ export default function ExpenseForm() {
       maximumFractionDigits: 0,
     }).format(value);
 
-  // Fetch Templates on Mount
-  React.useEffect(() => {
-    async function loadTemplates() {
-      try {
-        const res = await fetch("/api/templates");
-
-        if (!res.ok) {
-          throw new Error("API error");
-        }
-
-        const data = await res.json();
-
-        if (!Array.isArray(data)) {
-          throw new Error("Templates is not array");
-        }
-
-        setTemplates(data);
-      } catch (err) {
-        console.error("Failed to load templates", err);
-        setTemplates([]);
-      }
-    }
-
-    loadTemplates();
-  }, []);
-
-  // Update Breakdown Field
   const updateBreakdownField = (id: string, value: string) => {
     setBreakdownFields((prev) =>
       prev.map((f) => (f.id === id ? { ...f, value } : f))
     );
   };
 
-  // Handle Template Selection
-  function handleTemplateSelect(templateId: string) {
-    const t = templates.find((x) => x.id === templateId);
-    if (!t) return;
-
-    // Set basic info
-    setTitle(t.name ?? "");
-    setCategory(t.category ?? "");
-    setPaymentMethod(t.paymentMethod ?? "");
-    setPlatform(t.platform ?? "");
-
-    // Set subtotal
-    setSubtotal(String(t.subtotal ?? ""));
-
-    // Set breakdown fields
-    setBreakdownFields([
-      { id: "shipping", label: "Shipping", value: String(t.shipping ?? "") },
-      { id: "discount", label: "Discount", value: String(t.discount ?? "") },
-      {
-        id: "serviceFee",
-        label: "Service Fee",
-        value: String(t.serviceFee ?? ""),
-      },
-      {
-        id: "additionalFee",
-        label: "Additional Fee",
-        value: String(t.additionalFee ?? ""),
-      },
-    ]);
-
-    // Auto switch to info tab
-    setActiveTab("info");
-  }
-
-  // Handle Submit
-  const handleSubmit = async () => {
-    // Validation
-    if (!title || !category || !subtotal) {
-      toast.error("Nama, Kategori, dan Nominal wajib diisi!");
-      return;
-    }
-
+  const handleSubmit = () => {
     setIsSubmitting(true);
+    const expenseData = {
+      title,
+      date,
+      category,
+      platform,
+      paymentMethod,
+      subtotal,
+      breakdownFields,
+      receipt,
+    };
 
-    try {
-      const formData = new FormData();
-
-      // Required fields
-      formData.append("name", title);
-      formData.append("category", category);
-      formData.append("subtotal", subtotal.replace(/,/g, ""));
-
-      // Optional fields
-      if (date) formData.append("date", date.toISOString());
-      if (paymentMethod) formData.append("paymentMethod", paymentMethod);
-      if (platform && platform !== "none")
-        formData.append("platform", platform);
-
-      // Breakdown fields
-      const shipping = breakdownFields.find((f) => f.id === "shipping")?.value;
-      const discount = breakdownFields.find((f) => f.id === "discount")?.value;
-      const serviceFee = breakdownFields.find(
-        (f) => f.id === "serviceFee"
-      )?.value;
-      const additionalFee = breakdownFields.find(
-        (f) => f.id === "additionalFee"
-      )?.value;
-
-      if (shipping) formData.append("shipping", shipping.replace(/,/g, ""));
-      if (discount) formData.append("discount", discount.replace(/,/g, ""));
-      if (serviceFee)
-        formData.append("serviceFee", serviceFee.replace(/,/g, ""));
-      if (additionalFee)
-        formData.append("additionalFee", additionalFee.replace(/,/g, ""));
-
-      const result = await addExpense(formData);
-
-      if (result.success) {
-        toast.success(result.message);
-
-        // Reset form
-        setTitle("");
-        setCategory("");
-        setPlatform("");
-        setPaymentMethod("");
-        setSubtotal("");
-        setReceipt(null);
-        setBreakdownFields([
-          { id: "shipping", label: "Shipping", value: "" },
-          { id: "discount", label: "Discount", value: "" },
-          { id: "serviceFee", label: "Service Fee", value: "" },
-          { id: "additionalFee", label: "Additional Fee", value: "" },
-        ]);
-        setDate(new Date());
-        setActiveTab("info");
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      toast.error("Terjadi kesalahan sistem");
-      console.error(error);
-    } finally {
+    setTimeout(() => {
+      console.log("Submitted", expenseData);
+      alert("Expense submitted");
       setIsSubmitting(false);
-    }
+      router.push("/finance/expenses");
+    }, 1000);
   };
 
   return (
@@ -235,7 +94,7 @@ export default function ExpenseForm() {
       bg-background text-foreground"
     >
       {/* Header */}
-      {/* <div className="px-4 py-4 border-b border-border flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="px-4 py-4 border-b border-border flex items-center gap-2 text-sm text-muted-foreground">
         <button
           type="button"
           onClick={() => router.back()}
@@ -244,7 +103,7 @@ export default function ExpenseForm() {
           <ChevronLeft size={16} />
           Back
         </button>
-      </div> */}
+      </div>
 
       {/* Summary Card */}
       <div className="m-4 p-6 rounded-xl border border-border shadow bg-card">
@@ -279,29 +138,13 @@ export default function ExpenseForm() {
         </div>
       </div>
 
-      {/* Template Selection */}
-      <div className="mx-4 mb-2">
-        <Select onValueChange={handleTemplateSelect}>
-          <SelectTrigger className="h-11 w-full justify-start">
-            <SelectValue placeholder="Pakai template (opsional)" />
-          </SelectTrigger>
-          <SelectContent>
-            {templates.map((t) => (
-              <SelectItem key={t.id} value={t.id}>
-                Template • {t.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Tabs */}
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
         className="flex-1 flex flex-col"
       >
-        <TabsList className="mx-4 bg-muted mt-2 w-90 xl:w-105">
+        <TabsList className="mx-4 bg-muted mt-2 w-89 xl:w-105">
           <TabsTrigger value="info" className="flex-1">
             Informations
           </TabsTrigger>
@@ -322,7 +165,6 @@ export default function ExpenseForm() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Kopi Kenangan"
-                required
               />
             </div>
 
@@ -333,23 +175,20 @@ export default function ExpenseForm() {
               <DatePicker date={date} onChange={setDate} />
             </div>
 
-            <div>
-              <label className="text-sm font-medium">Category</label>
-              <CategorySelect value={category} onChange={setCategory} />
-            </div>
+            <div className="space-y-1.5">
+                <label className="text-sm font-medium">Category</label>
+                <CategorySelect value={category} onChange={setCategory} />
+              </div>
 
-            <div>
-              <label className="text-sm font-medium">Platform</label>
-              <PlatformSelect value={platform} onChange={setPlatform} />
-            </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Platform / Store</label>
+                <PlatformSelect value={platform} onChange={setPlatform} />
+              </div>
 
-            <div>
-              <label className="text-sm font-medium">Payment Method</label>
-              <PaymentSelect
-                value={paymentMethod}
-                onChange={setPaymentMethod}
-              />
-            </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Payment Method</label>
+                <PaymentSelect value={paymentMethod} onChange={setPaymentMethod} />
+              </div>
           </div>
         </TabsContent>
 
@@ -366,8 +205,6 @@ export default function ExpenseForm() {
                 type="number"
                 value={subtotal}
                 onChange={(e) => setSubtotal(e.target.value)}
-                placeholder="0"
-                required
               />
             </div>
 
@@ -377,7 +214,6 @@ export default function ExpenseForm() {
                 variant="outline"
                 className="w-full justify-between"
                 onClick={() => setIsBreakdownOpen((v) => !v)}
-                type="button"
               >
                 Expense breakdown
                 {isBreakdownOpen ? (
@@ -401,7 +237,6 @@ export default function ExpenseForm() {
                           onChange={(e) =>
                             updateBreakdownField(field.id, e.target.value)
                           }
-                          placeholder="0"
                         />
                       </div>
                     ))}
@@ -433,14 +268,7 @@ export default function ExpenseForm() {
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Submitting...
-            </>
-          ) : (
-            "Submit expense"
-          )}
+          {isSubmitting ? "Submitting.." : "Submit Expense"}
         </Button>
       </div>
     </div>
