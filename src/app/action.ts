@@ -42,7 +42,7 @@ export async function addExpense(formData: FormData) {
       Shipping: { number: shipping },
       Discount: { number: discount },
       "Service Fee": { number: serviceFee },
-      "Additional Payment": { number: additionalFee }, // ✅ SESUAIKAN DENGAN NOTION
+      "Additional Fee": { number: additionalFee }, // ✅ SESUAIKAN DENGAN NOTION
     };
 
     if (platformName && platformId) {
