@@ -7,7 +7,6 @@ import { CATEGORY_IDS } from "@/lib/constants";
 const normalizeId = (id: string) => id.replace(/-/g, "");
 
 // 2. Buat Map Terbalik: ID (Tanpa Strip) -> Nama Category
-// Kita pastikan key-nya bersih dari strip
 const ID_TO_CATEGORY = Object.entries(CATEGORY_IDS).reduce((acc, [name, id]) => {
   const cleanId = normalizeId(id); 
   acc[cleanId] = name;
@@ -16,8 +15,38 @@ const ID_TO_CATEGORY = Object.entries(CATEGORY_IDS).reduce((acc, [name, id]) => 
 
 export async function getExpenses() {
   try {
+    // --- LOGIC TANGGAL BULAN INI ---
+    const now = new Date();
+    const year = now.getFullYear();
+    // getMonth() mulai dari 0, jadi perlu +1. padStart biar jadi "01", "02", dst.
+    const month = String(now.getMonth() + 1).padStart(2, '0'); 
+    
+    // Cari hari terakhir di bulan ini (tgl 0 bulan depan = hari terakhir bulan ini)
+    const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+
+    const startOfMonth = `${year}-${month}-01`;
+    const endOfMonth = `${year}-${month}-${lastDay}`;
+    // --------------------------------
+
     const response = await notion.databases.query({
       database_id: DATABASE_ID,
+      page_size: 40, // 👈 LIMIT 40 ITEM
+      filter: {      // 👈 FILTER BULAN INI
+        and: [
+          {
+            property: "Date",
+            date: {
+              on_or_after: startOfMonth,
+            },
+          },
+          {
+            property: "Date",
+            date: {
+              on_or_before: endOfMonth,
+            },
+          },
+        ],
+      },
       sorts: [
         {
           property: "Date",
@@ -36,12 +65,7 @@ export async function getExpenses() {
       let categoryName = "Miscellaneous";
 
       if (rawCatId) {
-        // 4. PENTING: Bersihkan ID dari Notion sebelum dicari di map
         const cleanCatId = normalizeId(rawCatId);
-        
-        // Debugging: Cek di terminal server jika masih error
-        // console.log(`Raw: ${rawCatId} -> Clean: ${cleanCatId} -> Match: ${ID_TO_CATEGORY[cleanCatId]}`);
-
         if (ID_TO_CATEGORY[cleanCatId]) {
           categoryName = ID_TO_CATEGORY[cleanCatId];
         }
@@ -58,7 +82,7 @@ export async function getExpenses() {
       return {
         id: page.id,
         title: props.Name?.title?.[0]?.plain_text || "Untitled",
-        category: categoryName, // Sekarang harusnya sudah benar
+        category: categoryName,
         amount: props.Amount?.number || 0,
         date: formattedDate,
         dateObj: dateObj,

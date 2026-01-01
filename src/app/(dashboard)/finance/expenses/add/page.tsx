@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDown, ChevronLeft, ChevronUp, Upload, BanknoteArrowDown } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronUp, Upload, BanknoteArrowDown, Loader2 } from "lucide-react";
 import { DatePicker } from "@/components/finance/expenses/date-picker";
 import { CategorySelect } from "@/components/finance/expenses/category-select";
 import { PlatformSelect } from "@/components/finance/expenses/platform-select";
@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  ICON_MAP,
-} from "@/lib/constants";
+import { ICON_MAP } from "@/lib/constants";
 import { Label } from "@/components/ui/label";
+
+// 👇 IMPORT SERVER ACTION (Sesuaikan path jika beda)
+import { addExpense } from "@/app/action/finance/addExpenses"; 
 
 type BreakdownField = {
   id: string;
@@ -67,25 +68,54 @@ export default function ExpenseForm() {
     );
   };
 
-  const handleSubmit = () => {
-    setIsSubmitting(true);
-    const expenseData = {
-      title,
-      date,
-      category,
-      platform,
-      paymentMethod,
-      subtotal,
-      breakdownFields,
-      receipt,
-    };
+  // 👇 FUNGSI SUBMIT YANG SUDAH DIPERBAIKI
+  const handleSubmit = async () => {
+    if (!title || !category || !subtotal) {
+      alert("Mohon isi Nama, Kategori, dan Nominal.");
+      return;
+    }
 
-    setTimeout(() => {
-      console.log("Submitted", expenseData);
-      alert("Expense submitted");
+    setIsSubmitting(true);
+
+    try {
+      // 1. Bungkus data ke dalam FormData
+      const formData = new FormData();
+      formData.append("name", title);
+      formData.append("date", date ? date.toISOString() : new Date().toISOString());
+      formData.append("category", category);
+      formData.append("platform", platform);
+      formData.append("paymentMethod", paymentMethod);
+      formData.append("subtotal", subtotal);
+
+      // Masukkan breakdown fields (shipping, discount, dll)
+      breakdownFields.forEach((field) => {
+        if (field.value) {
+            formData.append(field.id, field.value);
+        }
+      });
+
+      // (Opsional) Kirim data Icon agar Notion page punya icon sesuai kategori
+      // Server action harus handle parsing JSON string ini
+      const iconData = { type: "emoji", emoji: "💸" }; // Default
+      // Logic mapping icon simple (bisa dikembangkan)
+      formData.append("icon", JSON.stringify(iconData));
+
+      // 2. Panggil Server Action
+      const result = await addExpense(formData);
+
+      if (result.success) {
+        // alert("Expense submitted!");
+        router.push("/finance/expenses"); // Redirect
+        router.refresh(); // Refresh data halaman tujuan
+      } else {
+        alert("Gagal menyimpan: " + result.message);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Terjadi kesalahan sistem.");
+    } finally {
       setIsSubmitting(false);
-      router.push("/finance/expenses");
-    }, 1000);
+    }
   };
 
   return (
@@ -112,12 +142,11 @@ export default function ExpenseForm() {
           Track your spending efficiently and make informed financial decisions.
         </p>
 
-        <div className="w-14 h-14 dark:bg-blue-200 bg-blue-300 rounded-xl flex items-center justify-center mx-auto mb-4">
+        <div className="w-14 h-14 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
           {(() => {
-            const Icon = category
-              ? ICON_MAP[category] || ICON_MAP.default
-              : BanknoteArrowDown;
-            return <Icon className="text-primary-foreground" size={28} />;
+            // Gunakan logic element React untuk Icon Map
+            const IconComp = category && ICON_MAP[category] ? ICON_MAP[category] : BanknoteArrowDown;
+            return <IconComp className="text-red-500" size={28} />;
           })()}
         </div>
 
@@ -133,8 +162,8 @@ export default function ExpenseForm() {
               })
             : "Today"}
         </div>
-        <div className="text-center text-3xl font-bold">
-          {formatCurrency(totalAmount)}
+        <div className="text-center text-3xl font-bold text-red-600">
+          {formatCurrency(totalAmount).replace("Rp", "Rp ")}
         </div>
       </div>
 
@@ -205,6 +234,7 @@ export default function ExpenseForm() {
                 type="number"
                 value={subtotal}
                 onChange={(e) => setSubtotal(e.target.value)}
+                placeholder="0"
               />
             </div>
 
@@ -262,13 +292,15 @@ export default function ExpenseForm() {
       </Tabs>
 
       {/* Actions */}
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border bg-background/80 backdrop-blur-md sticky bottom-0">
         <Button
-          className="w-full"
+          className="w-full bg-red-600 hover:bg-red-700 text-white"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Submitting.." : "Submit Expense"}
+          {isSubmitting ? (
+              <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={16} /> Saving...</span>
+          ) : "Submit Expense"}
         </Button>
       </div>
     </div>
