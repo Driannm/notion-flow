@@ -52,25 +52,25 @@ export async function addExpense(formData: FormData) {
     }
 
     // ✅ Parse dan set icon
-    let icon: any = undefined;
-    if (iconData) {
-      try {
-        const parsedIcon = JSON.parse(iconData);
-        if (parsedIcon.type === "emoji") {
-          icon = { emoji: parsedIcon.emoji };
-        } else if (parsedIcon.type === "external") {
-          icon = { external: { url: parsedIcon.url } };
-        }
-      } catch (e) {
-        console.warn("Failed to parse icon:", e);
-      }
-    }
+    // let icon: any = undefined;
+    // if (iconData) {
+    //   try {
+    //     const parsedIcon = JSON.parse(iconData);
+    //     if (parsedIcon.type === "emoji") {
+    //       icon = { emoji: parsedIcon.emoji };
+    //     } else if (parsedIcon.type === "external") {
+    //       icon = { external: { url: parsedIcon.url } };
+    //     }
+    //   } catch (e) {
+    //     console.warn("Failed to parse icon:", e);
+    //   }
+    // }
 
-    await notion.pages.create({
-      parent: { database_id: DATABASE_ID },
-      properties: properties,
-      icon: icon, // ✅ Set icon
-    });
+    // await notion.pages.create({
+    //   parent: { database_id: DATABASE_ID },
+    //   properties: properties,
+    //   icon: icon, // ✅ Set icon
+    // });
 
     await notion.pages.create({
       parent: { database_id: DATABASE_ID },
