@@ -32,7 +32,7 @@ export async function addExpense(formData: FormData) {
   const platformId = PLATFORM_IDS[platformName];
 
   if (!name || totalAmount <= 0 || !categoryId) {
-    return { success: false, message: "Nama, kategori, dan total wajib diisi." };
+    return { success: false, message: "Nama, kategori, dan total wajib diisi!" };
   }
 
   try {
