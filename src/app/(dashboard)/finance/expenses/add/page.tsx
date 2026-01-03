@@ -250,6 +250,7 @@ export default function ExpenseForm() {
               <label className="text-sm font-medium">Subtotal</label>
               <Input
                 type="number"
+                inputMode="numeric"
                 value={subtotal}
                 onChange={(e) => setSubtotal(e.target.value)}
                 placeholder="0"
@@ -281,6 +282,7 @@ export default function ExpenseForm() {
                         </label>
                         <Input
                           type="number"
+                          inputMode="numeric"
                           value={field.value}
                           onChange={(e) =>
                             updateBreakdownField(field.id, e.target.value)
