@@ -115,7 +115,7 @@ export const PLATFORM_IDS: Record<string, string> = {
   "TikTok Shop": "27c9ec9fc1ce803fab83fa38ceb4c046",
   "Shopee-Food": "27c9ec9fc1ce8096b1d1eb04f660acd0",
   "Tokopedia": "27c9ec9fc1ce80599e17c97ae8cb5704",
-  "Shopee": "27c9ec9fc1ce8045b4a8c27f91f1847e",
+  "Shopee": "27c9ec9fc1ce80c2a18fdae73bd21c41",
   "Gojek": "27c9ec9fc1ce80b7a071d27091e687ad",
   "Grab": "27c9ec9fc1ce80468320cbb8be5f52ad",
 
