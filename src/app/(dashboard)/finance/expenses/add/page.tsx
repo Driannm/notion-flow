@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import * as React from "react";
+import { toast } from "sonner";
 import {
   ChevronDown,
   ChevronLeft,
@@ -116,15 +118,22 @@ export default function ExpenseForm() {
       const result = await addExpense(formData);
 
       if (result.success) {
-        // alert("Expense submitted!");
-        router.push("/finance/expenses"); // Redirect
-        router.refresh(); // Refresh data halaman tujuan
+        // 👇 GANTI ALERT DENGAN INI
+        toast.success("Transaksi Berhasil Disimpan!", {
+          description: `${title} - ${formatCurrency(parseFloat(subtotal))}`,
+          duration: 3000,
+        });
+        
+        router.push("/finance/expenses");
+        router.refresh();
       } else {
-        alert("Gagal menyimpan: " + result.message);
+        // 👇 Error Toast
+        toast.error("Gagal menyimpan", {
+          description: result.message,
+        });
       }
     } catch (error) {
-      console.error(error);
-      alert("Terjadi kesalahan sistem.");
+      toast.error("Terjadi kesalahan sistem");
     } finally {
       setIsSubmitting(false);
     }
@@ -213,7 +222,7 @@ export default function ExpenseForm() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground ml-1">
+              <Label className="text-sm font-medium">
                 Tanggal
               </Label>
               <DatePicker date={date} onChange={setDate} />

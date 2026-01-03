@@ -11,24 +11,28 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ICON_MAP } from "@/lib/constants"; 
-import { getExpenseById } from "@/app/action/finance/getExpenses"; 
+import { getExpenseById } from "@/app/action/finance/getExpenses"; // Sesuaikan path import
 import ActionButtons from "@/components/finance/expenses/action-button";
 
 export const dynamic = "force-dynamic";
 
+// 👇 1. UPDATE TIPE PROPS: params harus Promise
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function ExpenseDetailPage({ params }: PageProps) {
-  // 1. Fetch Data
-  const { success, data } = await getExpenseById(params.id);
+  // 👇 2. AWAIT PARAMS DULU SEBELUM AKSES ID
+  const { id } = await params;
+
+  // 3. Gunakan variable 'id' yang sudah di-resolve
+  const { success, data } = await getExpenseById(id);
 
   if (!success || !data) {
     return notFound();
   }
 
-  // 2. Determine Icon
+  // 4. Determine Icon
   const IconComponent = ICON_MAP[data.category] || ICON_MAP["default"];
 
   // Format IDR Helper
@@ -112,10 +116,9 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Section 2: Financial Breakdown (Only show if details exist) */}
+          {/* Section 2: Financial Breakdown */}
           {(data.subtotal > 0 || data.fee > 0 || data.discount > 0) && (
             <div className="border border-border rounded-xl p-4 bg-card space-y-3 shadow-sm relative overflow-hidden">
-                {/* Decorative jagged line top */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-border/30 to-transparent" />
                 
                 <div className="flex items-center gap-2 mb-2 text-muted-foreground">

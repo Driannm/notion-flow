@@ -1,16 +1,32 @@
 "use client";
 
 import * as React from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { SwipeableItem } from "@/components/finance/expenses/swipeable-item";
+import { deleteExpense } from "@/app/action/finance/getExpenses";
 import {
   ArrowLeft,
   Search,
   SlidersHorizontal,
   Plus,
   Calendar,
+  Loader2,
+  AlertTriangle,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ICON_MAP } from "@/lib/constants";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Transaction {
   id: string;
@@ -34,13 +50,23 @@ export default function ExpensesClientView({
   const router = useRouter();
   const [activeTab, setActiveTab] = React.useState("All");
 
-  const [currentMonthFormatted] = React.useState(() => {
-    return new Date().toLocaleDateString("id-ID", {
-      month: "long",
-    });
-  });
+  // State untuk menghandle Modal Delete
+  const [deleteConfirmationId, setDeleteConfirmationId] = React.useState<
+    string | null
+  >(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
-  // Format Currency IDR
+  // 1. Inisialisasi dengan string kosong (atau fallback static)
+  const [currentMonthFormatted, setCurrentMonthFormatted] = React.useState("");
+  // 2. Set tanggal hanya setelah komponen di-mount di browser
+  React.useEffect(() => {
+    setCurrentMonthFormatted(
+      new Date().toLocaleDateString("id-ID", {
+        month: "long",
+      })
+    );
+  }, []);
+
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -48,29 +74,64 @@ export default function ExpensesClientView({
       maximumFractionDigits: 0,
     }).format(value);
 
-  // 1. Generate Unique Categories dari Data untuk Filter Tabs
   const categories = [
     "All",
     ...Array.from(new Set(initialData.map((t) => t.category))),
   ];
 
-  // 2. Filter Logic
   const filteredTransactions =
     activeTab === "All"
       ? initialData
       : initialData.filter((t) => t.category === activeTab);
 
-  // 3. Generate Chart Data (Weekly based on current week)
-  // Logic sederhana: map transaction ke hari dalam seminggu
+  // --- LOGIC BARU ---
+
+  // 1. Trigger saat tombol swipe delete ditekan (Cuma buka modal)
+  const handleDeleteTrigger = (id: string) => {
+    setDeleteConfirmationId(id);
+  };
+
+  // 2. Eksekusi Hapus yang Sebenarnya (Dipanggil dari Modal)
+  const confirmDelete = async () => {
+    if (!deleteConfirmationId) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await deleteExpense(deleteConfirmationId);
+      if (res.success) {
+        setDeleteConfirmationId(null);
+
+        // 👇 SUCCESS TOAST
+        toast.success("Transaksi Dihapus", {
+          description: "Data telah dihapus dari database.",
+          icon: <Trash2 className="w-4 h-4" />, // Bisa tambah icon custom
+        });
+
+        router.refresh();
+      } else {
+        // 👇 ERROR TOAST
+        toast.error("Gagal menghapus data");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Terjadi kesalahan koneksi");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Logic Navigasi
+  const handleEdit = (id: string) =>
+    router.push(`/finance/expenses/${id}/edit`);
+  const handleDetail = (id: string) => router.push(`/finance/expenses/${id}`);
+
+  // Chart Logic (Tetap sama)
   const weeklyChartData = React.useMemo(() => {
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const stats = days.map((day) => ({ day, amount: 0, active: false }));
-
     const today = new Date();
-    const currentDayIndex = today.getDay(); // 0 = Sunday
+    const currentDayIndex = today.getDay();
     stats[currentDayIndex].active = true;
-
-    // Filter transaksi 7 hari terakhir
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(today.getDate() - 6);
 
@@ -82,15 +143,14 @@ export default function ExpensesClientView({
       }
     });
 
-    // Normalisasi tinggi bar (max height logic)
-    const maxVal = Math.max(...stats.map((s) => s.amount), 1); // avoid div by 0
+    const maxVal = Math.max(...stats.map((s) => s.amount), 1);
     return stats.map((s) => ({
       ...s,
       heightClass: `h-[${Math.max(
         Math.round((s.amount / maxVal) * 100),
         10
-      )}%]`, // Tailwind dynamic value limitation workaround below
-      heightPercent: Math.max(Math.round((s.amount / maxVal) * 100), 10), // Use inline style for height
+      )}%]`,
+      heightPercent: Math.max(Math.round((s.amount / maxVal) * 100), 10),
     }));
   }, [initialData]);
 
@@ -124,44 +184,13 @@ export default function ExpensesClientView({
               </span>
               <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full text-xs text-white backdrop-blur-sm">
                 <Calendar className="w-3 h-3" />
-                <span>{currentMonthFormatted}</span>
+                <span>{currentMonthFormatted || "Loading..."}</span>
               </div>
             </div>
             <div className="text-3xl font-bold mb-2">
               {formatCurrency(totalExpense)}
             </div>
             <div className="text-xs text-red-100/80">Based on Notion Data</div>
-
-            {/* Quick Stats */}
-            {/* <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-border/50">
-              <div>
-                <div className="text-xs text-white mb-1">
-                  Biggest
-                </div>
-                <div className="text-sm font-semibold text-white">
-                  {formatCurrency(stats.totalIncome).replace("Rp", "")}
-                  20000
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-white mb-1">
-                  Smalles
-                </div>
-                <div className="text-sm font-semibold text-white">
-                  {formatCurrency(stats.totalExpenses).replace("Rp", "")}
-                  20000
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-white mb-1">
-                  Avarage
-                </div>
-                <div className="text-sm font-semibold text-white">
-                  {formatCurrency(stats.totalDebts).replace("Rp", "")}
-                  20000
-                </div>
-              </div>
-            </div> */}
           </div>
         </div>
 
@@ -173,9 +202,7 @@ export default function ExpensesClientView({
                 key={idx}
                 className="flex flex-col items-center gap-2 flex-1 h-full justify-end"
               >
-                {/* Bar */}
                 <div className="w-full relative group h-full flex items-end justify-center">
-                  {/* Tooltip */}
                   {stat.amount > 0 && (
                     <div className="hidden group-hover:block absolute -top-8 bg-popover text-popover-foreground text-[10px] px-2 py-1 rounded shadow z-20 whitespace-nowrap">
                       {formatCurrency(stat.amount)}
@@ -229,40 +256,43 @@ export default function ExpensesClientView({
             </span>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-0">
             {filteredTransactions.map((item) => {
-              // Get Icon from Map based on Category Name
               const IconComponent =
                 ICON_MAP[item.category] || ICON_MAP["default"];
 
               return (
-                <div
+                <SwipeableItem
                   key={item.id}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:bg-accent transition-colors"
+                  onClick={() => handleDetail(item.id)}
+                  onEdit={() => handleEdit(item.id)}
+                  // 👇 Panggil trigger modal, bukan langsung hapus
+                  onDelete={() => handleDeleteTrigger(item.id)}
                 >
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-red-500/10 text-red-500">
-                    <IconComponent className="w-5 h-5" />
-                  </div>
-
-                  <div className="flex-1 min-w-0 ">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <h4 className="font-semibold text-sm truncate pr-2">
-                        {item.title}
-                      </h4>
-                      <span className="font-semibold text-sm text-red-500 shrink-0">
-                        - {formatCurrency(item.amount).replace("Rp", "")}
-                      </span>
+                  <div className="flex items-center gap-3 p-3 border border-border bg-card rounded-xl">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-red-500/10 text-red-500">
+                      <IconComponent className="w-5 h-5" />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">
-                        {item.paymentMethod}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.date}
-                      </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <h4 className="font-semibold text-sm truncate pr-2">
+                          {item.title}
+                        </h4>
+                        <span className="font-semibold text-sm text-red-500 shrink-0">
+                          - {formatCurrency(item.amount).replace("Rp", "")}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">
+                          {item.category} • {item.paymentMethod}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.date}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </SwipeableItem>
               );
             })}
 
@@ -276,14 +306,52 @@ export default function ExpensesClientView({
       </div>
 
       {/* FAB */}
-      <div className="fixed bottom-6 right-1/2 translate-x-1/2 max-w-md w-full px-4 flex justify-end pointer-events-none">
+      <div className="fixed bottom-6 right-1/2 translate-x-1/2 max-w-md w-full px-4 flex justify-end pointer-events-none z-50">
         <Button
-          className="h-14 w-14 rounded-full shadow-xl bg-red-600 hover:bg-red-700 pointer-events-auto"
+          className="h-14 w-14 rounded-full shadow-xl bg-red-600 hover:bg-red-700 pointer-events-auto flex items-center justify-center"
           onClick={() => router.push("/finance/expenses/add")}
         >
           <Plus className="w-6 h-6 text-white" />
         </Button>
       </div>
+
+      {/* 👇 MODAL DELETE CONFIRMATION */}
+      <AlertDialog
+        open={!!deleteConfirmationId}
+        onOpenChange={(open) => !open && setDeleteConfirmationId(null)}
+      >
+        <AlertDialogContent className="w-[90%] rounded-xl sm:max-w-[425px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Delete Transaction
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this transaction? This action
+              cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault(); // Mencegah modal auto-close sebelum proses selesai
+                confirmDelete();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white focus:ring-red-600"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
