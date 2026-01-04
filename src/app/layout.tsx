@@ -1,28 +1,33 @@
-import { Inter, Bricolage_Grotesque } from "next/font/google"; // 1. Import font kedua 
+import { Inter, Bricolage_Grotesque } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { LanguageProvider } from "@/components/LanguageProvider";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-// 2. Konfigurasi Font Pertama (Manrope)
+// 1. Konfigurasi Font Pertama (Manrope/Inter)
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-inter", // Definisi nama variabel CSS
+  variable: "--font-inter",
 });
 
-// 3. Konfigurasi Font Kedua (Contoh: Playfair Display)
+// 2. Konfigurasi Font Kedua (Bricolage)
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
-  weight: ["400", "700"], // Sesuaikan weight yang butuh saja
-  variable: "--font-bricolage_grotesque", // Definisi nama variabel CSS
+  weight: ["400", "700"],
+  variable: "--font-bricolage_grotesque",
 });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    // 4. Gabungkan kedua variabel font di className
     <html lang="en" suppressHydrationWarning>
-      <body 
+      <body
         className={`${inter.variable} ${bricolage.variable} font-sans antialiased`}
       >
         <ThemeProvider
@@ -31,7 +36,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          {/* Tambahkan LanguageProvider DI DALAM ThemeProvider */}
+          <LanguageProvider>
+             {/* Wrapper Layout Kamu */}
+             <div className="min-h-screen flex justify-center bg-zinc-100 dark:bg-zinc-950">
+                <div className="w-full max-w-md ...">
+                  <main className="flex-1 scroll-smooth">
+                    {children}
+                  </main>
+                </div>
+             </div>
+          </LanguageProvider>
+
+          <Toaster position="top-center" richColors />
         </ThemeProvider>
       </body>
     </html>
