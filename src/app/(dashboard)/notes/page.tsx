@@ -1,5 +1,5 @@
 import Notes from "@/components/notes/notes-grid";
-import { ModeToggle } from "@/components/mode-toggle";
+import { ModeToggle } from "@/components/ModeToggle";
 import { Toaster } from "react-hot-toast";
 
 export default function Home() {

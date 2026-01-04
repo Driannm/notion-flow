@@ -1,5 +1,5 @@
 import { Inter, Bricolage_Grotesque } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
