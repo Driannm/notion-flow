@@ -1,51 +1,50 @@
 "use server";
 
 import { notion, DATABASE_ID } from "@/lib/notion-server";
-import { CATEGORY_IDS } from "@/lib/constants";
+import { CATEGORY_IDS, PLATFORM_IDS } from "@/lib/constants";
+import { revalidatePath } from "next/cache";
 
-// 1. Helper: Bersihkan tanda strip (-) dari UUID agar seragam
+// --- HELPERS ---
+
+// 1. Bersihkan tanda strip (-) dari UUID agar seragam
 const normalizeId = (id: string) => id.replace(/-/g, "");
 
-// 2. Buat Map Terbalik: ID (Tanpa Strip) -> Nama Category
+// 2. Map Terbalik: ID -> Nama Category
 const ID_TO_CATEGORY = Object.entries(CATEGORY_IDS).reduce((acc, [name, id]) => {
   const cleanId = normalizeId(id); 
   acc[cleanId] = name;
   return acc;
 }, {} as Record<string, string>);
 
+// 3. Map Terbalik: ID -> Nama Platform
+const ID_TO_PLATFORM = Object.entries(PLATFORM_IDS).reduce((acc, [name, id]) => {
+  const cleanId = normalizeId(id);
+  acc[cleanId] = name;
+  return acc;
+}, {} as Record<string, string>);
+
+
+// --- MAIN FUNCTIONS ---
+
 export async function getExpenses() {
   try {
-    // --- LOGIC TANGGAL BULAN INI ---
+    // --- LOGIC TANGGAL (2 Bulan Terakhir) ---
+    // Kita ambil data dari tanggal 1 bulan lalu, agar fitur slider (Prev Month) bisa jalan.
     const now = new Date();
-    const year = now.getFullYear();
-    // getMonth() mulai dari 0, jadi perlu +1. padStart biar jadi "01", "02", dst.
-    const month = String(now.getMonth() + 1).padStart(2, '0'); 
+    const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     
-    // Cari hari terakhir di bulan ini (tgl 0 bulan depan = hari terakhir bulan ini)
-    const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
-
-    const startOfMonth = `${year}-${month}-01`;
-    const endOfMonth = `${year}-${month}-${lastDay}`;
-    // --------------------------------
+    // Format ke YYYY-MM-DD untuk filter Notion
+    const startOfFilterStr = prevMonthDate.toISOString().split('T')[0]; 
+    // ----------------------------------------
 
     const response = await notion.databases.query({
       database_id: DATABASE_ID,
-      page_size: 40, // 👈 LIMIT 40 ITEM
-      filter: {      // 👈 FILTER BULAN INI
-        and: [
-          {
-            property: "Date",
-            date: {
-              on_or_after: startOfMonth,
-            },
-          },
-          {
-            property: "Date",
-            date: {
-              on_or_before: endOfMonth,
-            },
-          },
-        ],
+      page_size: 100, // Limit diperbesar agar data 2 bulan muat
+      filter: {
+        property: "Date",
+        date: {
+          on_or_after: startOfFilterStr, // Ambil dari awal bulan lalu sampai sekarang
+        },
       },
       sorts: [
         {
@@ -59,11 +58,9 @@ export async function getExpenses() {
     const transactions = response.results.map((page: any) => {
       const props = page.properties;
 
-      // 3. Ambil Raw ID dari Notion
+      // 1. Resolve Category Name
       const rawCatId = props.Category?.relation?.[0]?.id;
-      
       let categoryName = "Miscellaneous";
-
       if (rawCatId) {
         const cleanCatId = normalizeId(rawCatId);
         if (ID_TO_CATEGORY[cleanCatId]) {
@@ -71,7 +68,7 @@ export async function getExpenses() {
         }
       }
 
-      // Format Tanggal
+      // 2. Format Tanggal (Display)
       const dateRaw = props.Date?.date?.start;
       const dateObj = dateRaw ? new Date(dateRaw) : new Date();
       const formattedDate = dateObj.toLocaleDateString("id-ID", {
@@ -79,14 +76,25 @@ export async function getExpenses() {
         month: "short",
       });
 
+      // 3. Hitung Breakdown Fields
+      const shipping = props.Shipping?.number || 0;
+      const serviceFee = props["Service Fee"]?.number || 0;
+      const additionalFee = props["Additional Fee"]?.number || 0;
+      const totalFee = shipping + serviceFee + additionalFee;
+
       return {
         id: page.id,
         title: props.Name?.title?.[0]?.plain_text || "Untitled",
         category: categoryName,
         amount: props.Amount?.number || 0,
         date: formattedDate,
-        dateObj: dateObj,
+        dateObj: dateObj, // Penting untuk filter client-side
         paymentMethod: props["Payment Method"]?.select?.name || "Cash",
+        
+        // Data tambahan untuk Breakdown UI
+        subtotal: props.Subtotal?.number || 0,
+        discount: props.Discount?.number || 0,
+        fee: totalFee,
       };
     });
 
@@ -97,26 +105,13 @@ export async function getExpenses() {
   }
 }
 
-import { PLATFORM_IDS } from "@/lib/constants";
-import { revalidatePath } from "next/cache";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { redirect } from "next/navigation";
-
-// Helper: Invert ID Map untuk Platform juga
-const ID_TO_PLATFORM = Object.entries(PLATFORM_IDS).reduce((acc, [name, id]) => {
-  const cleanId = normalizeId(id);
-  acc[cleanId] = name;
-  return acc;
-}, {} as Record<string, string>);
-
-
 export async function getExpenseById(id: string) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const page: any = await notion.pages.retrieve({ page_id: id });
     const props = page.properties;
 
-    // 1. Resolve Category Name
+    // 1. Resolve Category
     const rawCatId = props.Category?.relation?.[0]?.id;
     let categoryName = "Miscellaneous";
     if (rawCatId) {
@@ -124,7 +119,7 @@ export async function getExpenseById(id: string) {
       if (ID_TO_CATEGORY[cleanCatId]) categoryName = ID_TO_CATEGORY[cleanCatId];
     }
 
-    // 2. Resolve Platform Name
+    // 2. Resolve Platform
     const rawPlatId = props["Platform / Store"]?.relation?.[0]?.id;
     let platformName = "-";
     if (rawPlatId) {
@@ -136,7 +131,6 @@ export async function getExpenseById(id: string) {
     const dateRaw = props.Date?.date?.start;
     const dateObj = dateRaw ? new Date(dateRaw) : new Date();
     
-    // Format: "Monday, 25 October 2023"
     const fullDate = dateObj.toLocaleDateString("id-ID", {
       weekday: "long",
       day: "numeric",
@@ -160,7 +154,8 @@ export async function getExpenseById(id: string) {
         date: fullDate,
         time: time,
         paymentMethod: props["Payment Method"]?.select?.name || "Cash",
-        // Detail tambahan (jika ada di notion)
+        
+        // Detail values
         subtotal: props.Subtotal?.number || 0,
         fee: (props["Service Fee"]?.number || 0) + (props["Additional Fee"]?.number || 0) + (props.Shipping?.number || 0),
         discount: props.Discount?.number || 0,
