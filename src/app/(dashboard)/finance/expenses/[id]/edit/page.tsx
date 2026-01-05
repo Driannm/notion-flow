@@ -197,10 +197,7 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
 
       <div className="flex-1 overflow-y-auto pb-6">
         {/* Summary Card (Theme: Amber/Edit) */}
-        <div className="m-4 p-6 rounded-xl border border-amber-200 shadow-sm bg-card relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-             <Pencil className="w-24 h-24 text-amber-500" />
-          </div>
+        <div className="m-4 p-6 rounded-xl border border-amber-100 shadow-sm bg-card relative overflow-hidden">
 
           <div className="w-16 h-16 bg-amber-50 border border-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
             {(() => {
@@ -222,7 +219,7 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
-          <TabsList className="mx-4 bg-muted h-10 p-1">
+          <TabsList className="mx-4 bg-muted h-10 p-1 w-96 xl:w-105">
             <TabsTrigger 
                 value="info" 
                 className="flex-1 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm"
@@ -280,7 +277,7 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
           >
               {/* Subtotal */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Total / Subtotal</label>
+                <label className="text-sm font-medium">Subtotal</label>
                 <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rp</span>
                     <Input

@@ -123,7 +123,7 @@ export default function ExpenseForm() {
           description: `${title} - ${formatCurrency(parseFloat(subtotal))}`,
           duration: 3000,
         });
-        
+
         router.push("/finance/expenses");
         router.refresh();
       } else {
@@ -145,23 +145,27 @@ export default function ExpenseForm() {
       bg-background text-foreground"
     >
       {/* Header */}
-      <div className="px-4 py-4 border-b border-border flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="px-4 py-4 border-b border-border flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10">
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex items-center gap-1 hover:text-primary transition"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition"
         >
           <ChevronLeft size={16} />
           Back
         </button>
+        <span className="text-sm font-semibold opacity-70 uppercase tracking-wider">
+          Add Transaction
+        </span>
+        <div className="w-14" /> {/* Spacer biar title tengah */}
       </div>
 
       {/* Summary Card */}
       <div className="m-4 p-6 rounded-xl border border-border shadow bg-card">
-        <h1 className="text-2xl font-semibold mb-2">Add Expenses</h1>
+        {/* <h1 className="text-2xl font-semibold mb-2">Add Expenses</h1>
         <p className="text-xs text-muted-foreground mb-6">
           Track your spending efficiently and make informed financial decisions.
-        </p>
+        </p> */}
 
         <div className="w-14 h-14 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
           {(() => {
@@ -222,9 +226,7 @@ export default function ExpenseForm() {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">
-                Tanggal
-              </Label>
+              <Label className="text-sm font-medium">Tanggal</Label>
               <DatePicker date={date} onChange={setDate} />
             </div>
 

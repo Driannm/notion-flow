@@ -6,6 +6,25 @@ import { notion, DATABASE_ID } from "@/lib/notion-server";
 import { CATEGORY_IDS, PLATFORM_IDS } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 
+// --- HELPER: FORMAT DATE TO JAKARTA (WIB / UTC+7) ---
+const getJakartaDate = (dateStr?: string) => {
+  // 1. Jika ada input dateStr, pakai itu. Jika tidak, pakai waktu sekarang.
+  const date = dateStr ? new Date(dateStr) : new Date();
+
+  // 2. Hitung Offset Jakarta (UTC+7) dalam milidetik
+  // 7 jam * 60 menit * 60 detik * 1000 ms
+  const jakartaOffset = 7 * 60 * 60 * 1000;
+
+  // 3. Buat object date baru yang sudah digeser waktunya seolah-olah UTC adalah WIB
+  const userTime = date.getTime();
+  const jakartaTime = new Date(userTime + jakartaOffset);
+
+  // 4. Ambil ISO String, tapi buang 'Z' di belakang dan ganti '+07:00'
+  // Contoh hasil: "2023-10-25T19:30:00.000+07:00"
+  return jakartaTime.toISOString().replace("Z", "+07:00");
+};
+
+// --- ADD EXPENSE ---
 export async function addExpense(formData: FormData) {
   const getNumber = (key: string) => {
     const val = formData.get(key);
@@ -17,8 +36,6 @@ export async function addExpense(formData: FormData) {
   const paymentMethod = formData.get("paymentMethod") as string;
   const categoryName = formData.get("category") as string;
   const platformName = formData.get("platform") as string;
-
-  const iconData = formData.get("icon") as string;
 
   const subtotal = getNumber("subtotal");
   const shipping = getNumber("shipping");
@@ -38,7 +55,8 @@ export async function addExpense(formData: FormData) {
   try {
     const properties: any = {
       Name: { title: [{ text: { content: name } }] },
-      Date: { date: { start: dateStr || new Date().toISOString() } },
+      // 👇 PERBAIKAN: Gunakan helper getJakartaDate
+      Date: { date: { start: getJakartaDate(dateStr) } },
       Category: { relation: [{ id: categoryId }] },
       "Payment Method": { select: { name: paymentMethod } },
       Amount: { number: totalAmount },
@@ -46,33 +64,12 @@ export async function addExpense(formData: FormData) {
       Shipping: { number: shipping },
       Discount: { number: discount },
       "Service Fee": { number: serviceFee },
-      "Additional Fee": { number: additionalFee }, // ✅ SESUAIKAN DENGAN NOTION
+      "Additional Fee": { number: additionalFee },
     };
 
     if (platformName && platformId) {
       properties["Platform / Store"] = { relation: [{ id: platformId }] };
     }
-
-    // ✅ Parse dan set icon
-    // let icon: any = undefined;
-    // if (iconData) {
-    //   try {
-    //     const parsedIcon = JSON.parse(iconData);
-    //     if (parsedIcon.type === "emoji") {
-    //       icon = { emoji: parsedIcon.emoji };
-    //     } else if (parsedIcon.type === "external") {
-    //       icon = { external: { url: parsedIcon.url } };
-    //     }
-    //   } catch (e) {
-    //     console.warn("Failed to parse icon:", e);
-    //   }
-    // }
-
-    // await notion.pages.create({
-    //   parent: { database_id: DATABASE_ID },
-    //   properties: properties,
-    //   icon: icon, // ✅ Set icon
-    // });
 
     await notion.pages.create({
       parent: { database_id: DATABASE_ID },

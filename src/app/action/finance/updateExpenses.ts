@@ -6,6 +6,24 @@ import { notion, DATABASE_ID } from "@/lib/notion-server";
 import { CATEGORY_IDS, PLATFORM_IDS } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 
+// --- HELPER: FORMAT DATE TO JAKARTA (WIB / UTC+7) ---
+const getJakartaDate = (dateStr?: string) => {
+  // 1. Jika ada input dateStr, pakai itu. Jika tidak, pakai waktu sekarang.
+  const date = dateStr ? new Date(dateStr) : new Date();
+
+  // 2. Hitung Offset Jakarta (UTC+7) dalam milidetik
+  // 7 jam * 60 menit * 60 detik * 1000 ms
+  const jakartaOffset = 7 * 60 * 60 * 1000;
+
+  // 3. Buat object date baru yang sudah digeser waktunya seolah-olah UTC adalah WIB
+  const userTime = date.getTime();
+  const jakartaTime = new Date(userTime + jakartaOffset);
+
+  // 4. Ambil ISO String, tapi buang 'Z' di belakang dan ganti '+07:00'
+  // Contoh hasil: "2023-10-25T19:30:00.000+07:00"
+  return jakartaTime.toISOString().replace("Z", "+07:00");
+};
+
 export async function updateExpense(pageId: string, formData: FormData) {
   const getNumber = (key: string) => {
     const val = formData.get(key);
@@ -36,7 +54,8 @@ export async function updateExpense(pageId: string, formData: FormData) {
   try {
     const properties: any = {
       Name: { title: [{ text: { content: name } }] },
-      Date: { date: { start: dateStr } },
+      // 👇 PERBAIKAN: Gunakan helper getJakartaDate
+      Date: { date: { start: getJakartaDate(dateStr) } },
       "Payment Method": { select: { name: paymentMethod } },
       Amount: { number: totalAmount },
       Subtotal: { number: subtotal },
@@ -53,7 +72,6 @@ export async function updateExpense(pageId: string, formData: FormData) {
         properties["Platform / Store"] = { relation: [{ id: platformId }] };
     }
 
-    // Update Page di Notion
     await notion.pages.update({
       page_id: pageId,
       properties: properties,
