@@ -8,8 +8,8 @@ import { ChevronLeft, Loader2, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/finance/expenses/date-picker";
-import { addDebtOrLoan } from "@/app/action/finance/debtsActions";
-import { MoneyInput } from "@/components/ui/money-input"; 
+import { addDebtOrLoan } from "@/app/action/finance/debtsAction";
+import { MoneyInput } from "@/components/MoneyInput"; 
 import {
   Select,
   SelectContent,
