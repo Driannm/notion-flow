@@ -229,7 +229,7 @@ export default function DebtsClientView({ debts, loans }: Props) {
               onClick={() => router.push(`/finance/debts/${item.id}`)}
               className={`p-4 rounded-2xl border bg-card shadow-sm transition-all active:scale-[0.98] cursor-pointer ${
                 isPaidOff
-                  ? "border-green-200 bg-green-50/30 opacity-80"
+                  ? "border-green-200 dark:bg-green-950/20 bg-green-50/30 opacity-80"
                   : "border-border"
               }`}
             >

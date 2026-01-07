@@ -10,9 +10,10 @@ import {
   Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ICON_MAP } from "@/lib/constants"; 
+import { ICON_MAP } from "@/lib/constants";
 import { getExpenseById } from "@/app/action/finance/getExpenses"; // Sesuaikan path import
 import ActionButtons from "@/components/finance/expenses/action-button";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,6 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
 
   return (
     <div className="w-full max-w-md min-h-screen mx-auto flex flex-col bg-background relative">
-      
       {/* Header */}
       <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10">
         <Link href="/finance/expenses">
@@ -70,8 +70,12 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
           </div>
 
           {/* Title & Amount */}
-          <h1 className="text-center font-semibold text-xl mb-1">{data.title}</h1>
-          <div className="text-sm text-muted-foreground mb-4">{data.category}</div>
+          <h1 className="text-center font-semibold text-xl mb-1">
+            {data.title}
+          </h1>
+          <div className="text-sm text-muted-foreground mb-4">
+            {data.category}
+          </div>
           <div className="text-4xl font-bold text-foreground tracking-tight">
             {formatIDR(data.amount)}
           </div>
@@ -79,7 +83,6 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
 
         {/* Detail List */}
         <div className="space-y-6">
-          
           {/* Section 1: General Info */}
           <div className="border border-border rounded-xl p-4 bg-card space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
@@ -89,7 +92,9 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
               </div>
               <div className="text-sm font-medium text-right">
                 <div>{data.date}</div>
-                <div className="text-xs text-muted-foreground font-normal">{data.time}</div>
+                <div className="text-xs text-muted-foreground font-normal">
+                  {data.time}
+                </div>
               </div>
             </div>
 
@@ -110,52 +115,72 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
                 <CreditCard className="w-4 h-4" />
                 <span>Payment Method</span>
               </div>
-              <div className="text-sm font-medium bg-muted px-2 py-1 rounded text-foreground">
-                {data.paymentMethod}
-              </div>
+
+              <Badge
+                variant="secondary"
+                className="dark:bg-red-700 bg-red-500 text-white"
+              >
+                <span className="text-sm font-medium px-2 py-1">
+                  {data.paymentMethod}
+                </span>
+              </Badge>
             </div>
           </div>
 
           {/* Section 2: Financial Breakdown */}
-          {(data.subtotal > 0 || data.fee > 0 || data.discount > 0) && (
+          {(data.subtotal > 0 ||
+            data.serviceFee > 0 ||
+            data.discount > 0 ||
+            data.shipping > 0 ||
+            data.additionalFee > 0) && (
             <div className="border border-border rounded-xl p-4 bg-card space-y-3 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-border/30 to-transparent" />
-                
-                <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                    <Receipt className="w-4 h-4" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">Breakdown</span>
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-border/30 to-transparent" />
+
+              {data.subtotal > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>{formatIDR(data.subtotal)}</span>
                 </div>
+              )}
 
-                {data.subtotal > 0 && (
-                    <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>{formatIDR(data.subtotal)}</span>
-                    </div>
-                )}
-                
-                {data.fee > 0 && (
-                    <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Fees & Shipping</span>
-                    <span>{formatIDR(data.fee)}</span>
-                    </div>
-                )}
-
-                {data.discount > 0 && (
-                    <div className="flex justify-between text-sm text-green-600">
-                    <span>Discount</span>
-                    <span>- {formatIDR(data.discount)}</span>
-                    </div>
-                )}
-
-                <div className="w-full h-[1px] bg-dashed border-t border-dashed border-border my-2" />
-                
-                <div className="flex justify-between font-bold text-base">
-                    <span>Total</span>
-                    <span>{formatIDR(data.amount)}</span>
+              {data.serviceFee > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    Service Fee / Tax
+                  </span>
+                  <span>{formatIDR(data.serviceFee)}</span>
                 </div>
+              )}
+
+              {data.shipping > 0 && (
+                <div className="flex justify-between text-sm text-blue-600">
+                  <span>Shipping</span>
+                  <span>{formatIDR(data.shipping)}</span>
+                </div>
+              )}
+
+              {data.discount > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Discount</span>
+                  <span>- {formatIDR(data.discount)}</span>
+                </div>
+              )}
+
+              {data.additionalFee > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Additional Fee</span>
+                  <span>{formatIDR(data.additionalFee)}</span>
+                </div>
+              )}
+
+              <div className="w-full h-[1px] bg-dashed border-t border-dashed border-border my-2" />
+
+              <div className="flex justify-between font-bold text-base">
+                <span>Total</span>
+                <span>{formatIDR(data.amount)}</span>
+              </div>
             </div>
           )}
-
         </div>
       </div>
 
@@ -163,7 +188,6 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
       <div className="p-4 border-t border-border bg-background/80 backdrop-blur-md sticky bottom-0">
         <ActionButtons id={data.id} />
       </div>
-
     </div>
   );
 }

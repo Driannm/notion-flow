@@ -11,6 +11,9 @@ import {
   Pencil, // Icon beda dikit untuk Edit
   Loader2,
   Trash2,
+  NotepadText,
+  ArrowLeft,
+  BanknoteArrowDown,
 } from "lucide-react";
 import { DatePicker } from "@/components/finance/expenses/date-picker";
 import { CategorySelect } from "@/components/finance/expenses/category-select";
@@ -26,6 +29,7 @@ import { Label } from "@/components/ui/label";
 // Import Actions
 import { getExpenseById } from "@/app/action/finance/getExpenses";
 import { updateExpense } from "@/app/action/finance/updateExpenses";
+import { MoneyInput } from "@/components/MoneyInput";
 
 type BreakdownField = {
   id: string;
@@ -34,9 +38,13 @@ type BreakdownField = {
 };
 
 // Next.js 15: Params is Promise
-export default function EditExpensePage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditExpensePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const router = useRouter();
-  
+
   // Unwrap params (React.use() logic for Next 15 client components)
   const { id } = React.use(params);
 
@@ -56,7 +64,9 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
   const [receipt, setReceipt] = React.useState<File | null>(null);
   const [isBreakdownOpen, setIsBreakdownOpen] = React.useState(false);
 
-  const [breakdownFields, setBreakdownFields] = React.useState<BreakdownField[]>([
+  const [breakdownFields, setBreakdownFields] = React.useState<
+    BreakdownField[]
+  >([
     { id: "shipping", label: "Shipping", value: "" },
     { id: "discount", label: "Discount", value: "" },
     { id: "serviceFee", label: "Service Fee", value: "" },
@@ -73,28 +83,34 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
           setCategory(data.category);
           setPlatform(data.platform !== "-" ? data.platform : "");
           setPaymentMethod(data.paymentMethod);
-          
+
           // Parse Date (Format: "Monday, 25 October 2023" -> Date Object)
-          // Karena getExpenseById mengembalikan formatted date string, 
-          // idealnya server mengembalikan raw ISO string juga. 
+          // Karena getExpenseById mengembalikan formatted date string,
+          // idealnya server mengembalikan raw ISO string juga.
           // Tapi disini kita coba parse manual atau set default today jika gagal.
           // *Saran: Update getExpenseById untuk return rawDate ISO string*
-          // Untuk sekarang kita set default today jika parsing ribet, 
+          // Untuk sekarang kita set default today jika parsing ribet,
           // atau asumsikan user akan set ulang jika salah.
-          setDate(new Date()); 
+          setDate(new Date());
 
           // Isi nominal
-          setSubtotal(data.subtotal ? data.subtotal.toString() : data.amount.toString());
-          
+          setSubtotal(
+            data.subtotal ? data.subtotal.toString() : data.amount.toString()
+          );
+
           // Isi breakdown jika ada
-          setBreakdownFields(prev => prev.map(field => {
-             if (field.id === "shipping" && data.fee) return { ...field, value: data.fee.toString() }; // Simplifikasi fee gabungan
-             if (field.id === "discount" && data.discount) return { ...field, value: data.discount.toString() };
-             return field;
-          }));
+          setBreakdownFields((prev) =>
+            prev.map((field) => {
+              if (field.id === "shipping" && data.fee)
+                return { ...field, value: data.fee.toString() }; // Simplifikasi fee gabungan
+              if (field.id === "discount" && data.discount)
+                return { ...field, value: data.discount.toString() };
+              return field;
+            })
+          );
         } else {
-            toast.error("Data tidak ditemukan");
-            router.push("/finance/expenses");
+          toast.error("Data tidak ditemukan");
+          router.push("/finance/expenses");
         }
       } catch (error) {
         console.error(error);
@@ -106,7 +122,6 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
 
     fetchData();
   }, [id, router]);
-
 
   const totalAmount = React.useMemo(() => {
     const base = parseFloat(subtotal) || 0;
@@ -141,7 +156,10 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
     try {
       const formData = new FormData();
       formData.append("name", title);
-      formData.append("date", date ? date.toISOString() : new Date().toISOString());
+      formData.append(
+        "date",
+        date ? date.toISOString() : new Date().toISOString()
+      );
       formData.append("category", category);
       formData.append("platform", platform);
       formData.append("paymentMethod", paymentMethod);
@@ -172,65 +190,84 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
 
   if (isLoading) {
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-background">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
     );
   }
 
   return (
-    <div className="w-full max-w-md min-h-screen mx-auto flex flex-col relative overflow-hidden shadow-2xl bg-background text-foreground">
-      
+    <div className="w-full max-w-md min-h-screen mx-auto flex flex-col relative overflow-hidden shadow-2xl
+      bg-background text-foreground">
       {/* Header */}
-      <div className="px-4 py-4 border-b border-border flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10">
-        <button
-          type="button"
+      <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10">
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => router.back()}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition"
+          className="-ml-2"
         >
-          <ChevronLeft size={16} />
-          Back
-        </button>
-        <span className="text-sm font-semibold opacity-70 uppercase tracking-wider">Edit Transaction</span>
-        <div className="w-8" /> {/* Spacer biar title tengah */}
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div className="font-semibold text-sm uppercase tracking-wider opacity-70">
+          Edit Transaction
+        </div>
+        <Button variant="ghost" size="icon" className="-mr-2"></Button>
       </div>
 
       <div className="flex-1 overflow-y-auto pb-6">
-        {/* Summary Card (Theme: Amber/Edit) */}
-        <div className="m-4 p-6 rounded-xl border border-amber-100 shadow-sm bg-card relative overflow-hidden">
+        {/* Summary Card */}
+        <div className="m-4 p-6 rounded-xl border border-border shadow bg-card">
+          {/* <h1 className="text-2xl font-semibold mb-2">Add Expenses</h1>
+        <p className="text-xs text-muted-foreground mb-6">
+          Track your spending efficiently and make informed financial decisions.
+        </p> */}
 
-          <div className="w-16 h-16 bg-amber-50 border border-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+          <div className="w-14 h-14 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
             {(() => {
-                const IconComp = category && ICON_MAP[category] ? ICON_MAP[category] : Pencil;
-                return <IconComp className="text-amber-500 w-8 h-8" />;
+              const IconComp =
+                category && ICON_MAP[category]
+                  ? ICON_MAP[category]
+                  : BanknoteArrowDown;
+              return <IconComp className="text-blue-500 w-8 h-8" />;
             })()}
           </div>
 
-          <div className="text-center font-medium text-lg truncate px-4">
-            {title || "Untitled Expense"}
+          <div className="text-center font-semibold">
+            {title || "Expense Title"}
           </div>
-          <div className="text-center text-xs text-muted-foreground mb-2">
-            {date ? date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "Today"}
+          <div className="text-center text-sm text-muted-foreground mb-2">
+            {date
+              ? date.toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "Today"}
           </div>
-          <div className="text-center text-3xl font-bold text-amber-600 tracking-tight">
+          <div className="text-center text-3xl font-bold">
             {formatCurrency(totalAmount).replace("Rp", "Rp ")}
           </div>
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
-          <TabsList className="mx-4 bg-muted h-10 p-1 w-96 xl:w-105">
-            <TabsTrigger 
-                value="info" 
-                className="flex-1 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm"
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex flex-col"
+        >
+          <TabsList className="mx-4 bg-muted h-10 p-1 w-96 xl:w-105 mt-2">
+            <TabsTrigger
+              value="info"
+              className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm dark: dark:data-[state=active]:text-blue-400 dark:data-[state=active]:shadow-none"
             >
-              Info
+              Informations
             </TabsTrigger>
-            <TabsTrigger 
-                value="proof" 
-                className="flex-1 data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-sm"
+            <TabsTrigger
+              value="proof"
+              className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm dark: dark:data-[state=active]:text-blue-400 dark:data-[state=active]:shadow-none"
             >
-              Amount
+              Expense Details
             </TabsTrigger>
           </TabsList>
 
@@ -239,35 +276,38 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
             value="info"
             className="m-4 mt-4 p-6 rounded-xl border border-border bg-card space-y-4 shadow-sm"
           >
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Expense Name</label>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Nasi Padang Sederhana"
-                  className="focus-visible:ring-amber-500/20 focus-visible:border-amber-500"
-                />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Expense Name</label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Nasi Padang Sederhana"
+                className="focus-visible:ring-blue-500/20 focus-visible:border-blue-500"
+              />
+            </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Date</Label>
-                <DatePicker date={date} onChange={setDate} />
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">Date</Label>
+              <DatePicker date={date} onChange={setDate} />
+            </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Category</label>
-                <CategorySelect value={category} onChange={setCategory} />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Category</label>
+              <CategorySelect value={category} onChange={setCategory} />
+            </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Platform / Store</label>
-                <PlatformSelect value={platform} onChange={setPlatform} />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Platform / Store</label>
+              <PlatformSelect value={platform} onChange={setPlatform} />
+            </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Payment Method</label>
-                <PaymentSelect value={paymentMethod} onChange={setPaymentMethod} />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Payment Method</label>
+              <PaymentSelect
+                value={paymentMethod}
+                onChange={setPaymentMethod}
+              />
+            </div>
           </TabsContent>
 
           {/* PROOF TAB */}
@@ -275,80 +315,68 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
             value="proof"
             className="m-4 mt-4 p-6 rounded-xl border border-border bg-card space-y-4 shadow-sm"
           >
-              {/* Subtotal */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Subtotal</label>
-                <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">Rp</span>
-                    <Input
-                        type="number"
-                        inputMode="numeric"
-                        value={subtotal}
-                        onChange={(e) => setSubtotal(e.target.value)}
-                        placeholder="0"
-                        className="pl-9 focus-visible:ring-amber-500/20 focus-visible:border-amber-500"
-                    />
-                </div>
-              </div>
+            {/* Subtotal */}
+            <div>
+              <label className="text-sm font-medium">Subtotal</label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={subtotal}
+                onChange={(e) => setSubtotal(e.target.value)}
+                placeholder="0"
+              />
+            </div>
 
-              {/* Expense Breakdown */}
-              <div className="pt-2">
-                <Button
-                  variant="outline"
-                  className="w-full justify-between hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 transition-all"
-                  onClick={() => setIsBreakdownOpen((v) => !v)}
-                >
-                  <span className="text-xs">Advanced Breakdown</span>
-                  {isBreakdownOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                </Button>
-
-                {isBreakdownOpen && (
-                  <div className="mt-4 space-y-4 p-4 bg-muted/30 rounded-xl border border-border/50">
-                    <div className="grid grid-cols-2 gap-4">
-                      {breakdownFields.map((field) => (
-                        <div key={field.id} className="space-y-1">
-                          <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                            {field.label}
-                          </label>
-                          <Input
-                            type="number"
-                            inputMode="numeric"
-                            value={field.value}
-                            onChange={(e) => updateBreakdownField(field.id, e.target.value)}
-                            className="h-9 text-xs focus-visible:ring-amber-500/20"
-                            placeholder="0"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            {/* Expense Breakdown */}
+            <div>
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                onClick={() => setIsBreakdownOpen((v) => !v)}
+              >
+                Expense breakdown
+                {isBreakdownOpen ? (
+                  <ChevronUp size={16} />
+                ) : (
+                  <ChevronDown size={16} />
                 )}
+              </Button>
 
-                {/* Upload Receipt (Optional di Edit, mungkin hanya display name) */}
-                <div className="mt-4">
-                    <label className={`flex flex-col items-center justify-center gap-2 rounded-xl p-6 cursor-pointer text-sm border-2 border-dashed transition-all duration-300 ${receipt ? "border-amber-500 bg-amber-50 text-amber-700" : "border-border text-muted-foreground hover:bg-amber-50/50 hover:border-amber-300 hover:text-amber-600"}`}>
-                        {receipt ? (
-                            <>
-                                <Upload className="w-8 h-8" />
-                                <span className="font-medium truncate max-w-[200px]">{receipt.name}</span>
-                                <span className="text-xs opacity-70">New file selected</span>
-                            </>
-                        ) : (
-                            <>
-                                <Upload className="w-6 h-6 mb-1 opacity-50" />
-                                <span className="font-medium">Update Receipt</span>
-                                <span className="text-xs opacity-50">Upload to replace existing</span>
-                            </>
-                        )}
-                        <input
-                            type="file"
-                            className="hidden"
-                            accept="image/*,.pdf"
-                            onChange={(e) => setReceipt(e.target.files?.[0] || null)}
+              {isBreakdownOpen && (
+                <div className="mt-4 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {breakdownFields.map((field) => (
+                      <div key={field.id}>
+                        <label className="text-xs font-medium text-muted-foreground">
+                          {field.label}
+                        </label>
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          value={field.value}
+                          onChange={(e) =>
+                            updateBreakdownField(field.id, e.target.value)
+                          }
                         />
-                    </label>
+                      </div>
+                    ))}
+                  </div>
+
+                  <label
+                    className="flex items-center justify-center gap-2 rounded-lg p-4 cursor-pointer text-sm
+                                  border-2 border-dashed border-border text-muted-foreground hover:bg-muted transition"
+                  >
+                    <Upload size={18} />
+                    {receipt ? receipt.name : "Upload receipt"}
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={(e) => setReceipt(e.target.files?.[0] || null)}
+                    />
+                  </label>
                 </div>
-              </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -356,13 +384,17 @@ export default function EditExpensePage({ params }: { params: Promise<{ id: stri
       {/* Actions */}
       <div className="p-4 border-t border-border bg-background/80 backdrop-blur-md sticky bottom-0 z-20">
         <Button
-          className="w-full h-12 text-base font-semibold shadow-lg shadow-amber-500/20 bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-all active:scale-[0.98]"
+          className="w-full h-12 text-base font-semibold shadow-lg shadow-blue-500/20 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all active:scale-[0.98]"
           onClick={handleUpdate}
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-             <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={18} /> Updating...</span>
-          ) : "Save Changes"}
+            <span className="flex items-center gap-2">
+              <Loader2 className="animate-spin" size={18} /> Updating...
+            </span>
+          ) : (
+            "Save Changes"
+          )}
         </Button>
       </div>
     </div>

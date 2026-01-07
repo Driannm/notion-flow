@@ -5,11 +5,12 @@ import * as React from "react";
 import { toast } from "sonner";
 import {
   ChevronDown,
-  ChevronLeft,
   ChevronUp,
   Upload,
   BanknoteArrowDown,
   Loader2,
+  ArrowLeft,
+  NotepadText,
 } from "lucide-react";
 import { DatePicker } from "@/components/finance/expenses/date-picker";
 import { CategorySelect } from "@/components/finance/expenses/category-select";
@@ -142,91 +143,99 @@ export default function ExpenseForm() {
   return (
     <div
       className="w-full max-w-md min-h-screen mx-auto flex flex-col relative overflow-hidden shadow-2xl
-      bg-background text-foreground"
+          bg-background text-foreground"
     >
       {/* Header */}
-      <div className="px-4 py-4 border-b border-border flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10">
-        <button
-          type="button"
+      <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10">
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => router.back()}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition"
+          className="-ml-2"
         >
-          <ChevronLeft size={16} />
-          Back
-        </button>
-        <span className="text-sm font-semibold opacity-70 uppercase tracking-wider">
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div className="font-semibold text-sm uppercase tracking-wider opacity-70">
           Add Transaction
-        </span>
-        <div className="w-14" /> {/* Spacer biar title tengah */}
+        </div>
+        <Button variant="ghost" size="icon" className="-mr-2">
+          <NotepadText className="w-5 h-5" />
+        </Button>
       </div>
 
-      {/* Summary Card */}
-      <div className="m-4 p-6 rounded-xl border border-border shadow bg-card">
-        {/* <h1 className="text-2xl font-semibold mb-2">Add Expenses</h1>
-        <p className="text-xs text-muted-foreground mb-6">
-          Track your spending efficiently and make informed financial decisions.
-        </p> */}
+      <div className="flex-1 overflow-y-auto pb-6">
+        {/* Summary Card */}
+        <div className="m-4 p-6 rounded-xl border border-border shadow bg-card">
+          {/* <h1 className="text-2xl font-semibold mb-2">Add Expenses</h1>
+            <p className="text-xs text-muted-foreground mb-6">
+              Track your spending efficiently and make informed financial decisions.
+            </p> */}
 
-        <div className="w-14 h-14 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-          {(() => {
-            // Gunakan logic element React untuk Icon Map
-            const IconComp =
-              category && ICON_MAP[category]
-                ? ICON_MAP[category]
-                : BanknoteArrowDown;
-            return <IconComp className="text-red-500" size={28} />;
-          })()}
+          <div className="w-14 h-14 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+            {(() => {
+              const IconComp =
+                category && ICON_MAP[category]
+                  ? ICON_MAP[category]
+                  : BanknoteArrowDown;
+              return <IconComp className="text-red-500 w-8 h-8" />;
+            })()}
+          </div>
+
+          <div className="text-center font-semibold">
+            {title || "Expense Title"}
+          </div>
+          <div className="text-center text-sm text-muted-foreground mb-2">
+            {date
+              ? date.toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "Today"}
+          </div>
+          <div className="text-center text-3xl font-bold">
+            {formatCurrency(totalAmount).replace("Rp", "Rp ")}
+          </div>
         </div>
 
-        <div className="text-center font-semibold">
-          {title || "Expense Title"}
-        </div>
-        <div className="text-center text-sm text-muted-foreground mb-2">
-          {date
-            ? date.toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })
-            : "Today"}
-        </div>
-        <div className="text-center text-3xl font-bold">
-          {formatCurrency(totalAmount).replace("Rp", "Rp ")}
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="flex-1 flex flex-col"
-      >
-        <TabsList className="mx-4 bg-muted mt-2 w-96 xl:w-105">
-          <TabsTrigger value="info" className="flex-1">
-            Informations
-          </TabsTrigger>
-          <TabsTrigger value="proof" className="flex-1">
-            Expense Details
-          </TabsTrigger>
-        </TabsList>
-
-        {/* INFO TAB */}
-        <TabsContent
-          value="info"
-          className="m-4 mt-0 p-6 rounded-xl border border-border bg-card"
+        {/* Tabs */}
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex flex-col"
         >
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Name of expense</label>
+          <TabsList className="mx-4 bg-muted h-10 p-1 w-96 xl:w-105 mt-2">
+            <TabsTrigger
+              value="info"
+              className="flex-1 data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm dark: dark:data-[state=active]:text-red-400 dark:data-[state=active]:shadow-none"
+            >
+              Informations
+            </TabsTrigger>
+            <TabsTrigger
+              value="proof"
+              className="flex-1 data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm dark: dark:data-[state=active]:text-red-400 dark:data-[state=active]:shadow-none"
+            >
+              Expense Details
+            </TabsTrigger>
+          </TabsList>
+
+          {/* INFO TAB */}
+          <TabsContent
+            value="info"
+            className="m-4 mt-4 p-6 rounded-xl border border-border bg-card space-y-4 shadow-sm"
+          >
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Expense Name</label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Kopi Kenangan"
+                placeholder="e.g. Nasi Padang Sederhana"
+                className="focus-visible:ring-red-500/20 focus-visible:border-red-500"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Tanggal</Label>
+              <Label className="text-sm font-medium">Date</Label>
               <DatePicker date={date} onChange={setDate} />
             </div>
 
@@ -247,15 +256,13 @@ export default function ExpenseForm() {
                 onChange={setPaymentMethod}
               />
             </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        {/* PROOF TAB */}
-        <TabsContent
-          value="proof"
-          className="m-4 mt-0 p-6 rounded-xl border border-border bg-card"
-        >
-          <div className="space-y-4">
+          {/* PROOF TAB */}
+          <TabsContent
+            value="proof"
+            className="m-4 mt-4 p-6 rounded-xl border border-border bg-card space-y-4 shadow-sm"
+          >
             {/* Subtotal */}
             <div>
               <label className="text-sm font-medium">Subtotal</label>
@@ -305,7 +312,7 @@ export default function ExpenseForm() {
 
                   <label
                     className="flex items-center justify-center gap-2 rounded-lg p-4 cursor-pointer text-sm
-                      border-2 border-dashed border-border text-muted-foreground hover:bg-muted transition"
+                                      border-2 border-dashed border-border text-muted-foreground hover:bg-muted transition"
                   >
                     <Upload size={18} />
                     {receipt ? receipt.name : "Upload receipt"}
@@ -318,23 +325,23 @@ export default function ExpenseForm() {
                 </div>
               )}
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Actions */}
-      <div className="p-4 border-t border-border bg-background/80 backdrop-blur-md sticky bottom-0">
+      <div className="p-4 border-t border-border bg-background/80 backdrop-blur-md sticky bottom-0 z-20">
         <Button
-          className="w-full"
+          className="w-full h-12 text-base font-semibold shadow-lg shadow-red-500/20 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all active:scale-[0.98]"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
           {isSubmitting ? (
             <span className="flex items-center gap-2">
-              <Loader2 className="animate-spin" size={16} /> Saving...
+              <Loader2 className="animate-spin" size={18} /> Updating...
             </span>
           ) : (
-            "Submit Expense"
+            "Save Changes"
           )}
         </Button>
       </div>

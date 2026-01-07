@@ -157,7 +157,9 @@ export async function getExpenseById(id: string) {
         
         // Detail values
         subtotal: props.Subtotal?.number || 0,
-        fee: (props["Service Fee"]?.number || 0) + (props["Additional Fee"]?.number || 0) + (props.Shipping?.number || 0),
+        shipping: props.Shipping?.number || 0,
+        serviceFee: props["Service Fee"]?.number || 0,
+        additionalFee: props["Additional Fee"]?.number || 0,
         discount: props.Discount?.number || 0,
       },
     };
