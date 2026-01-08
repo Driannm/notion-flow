@@ -101,10 +101,14 @@ export default function EditExpensePage({
           // Isi breakdown jika ada
           setBreakdownFields((prev) =>
             prev.map((field) => {
-              if (field.id === "shipping" && data.fee)
-                return { ...field, value: data.fee.toString() }; // Simplifikasi fee gabungan
+              if (field.id === "shipping" && data.shipping)
+                return { ...field, value: data.shipping.toString() }; 
               if (field.id === "discount" && data.discount)
                 return { ...field, value: data.discount.toString() };
+              if (field.id === "servicefee" && data.serviceFee)
+                return { ...field, value: data.serviceFee.toString() };
+              if (field.id === "additionalFee" && data.additionalFee)
+                return { ...field, value: data.additionalFee.toString() };
               return field;
             })
           );
