@@ -17,7 +17,19 @@ export const dictionary = {
     activeNotes: "catatan aktif",
     editProfile: "Ubah Profil",
     logout: "Keluar",
-    lastTx: "Gaji Bulanan", // Contoh statis
+    lastTx: "Gaji Bulanan",
+    incomeTitle: "Pemasukan",
+    totalIncome: "Total Pemasukan",
+    sourcesBreakdown: "Sumber Pemasukan",
+    recentTransactions: "Riwayat Transaksi",
+    viewReport: "Lihat Laporan",
+    filter: "Filter",
+    addIncome: "Tambah Pemasukan",
+    contribution: "kontribusi",
+    noData: "Belum ada data pemasukan.",
+    month: {
+        thisMonth: "Bulan Ini"
+    }
   },
   en: {
     greeting: "Hello, Honey 👋",
@@ -36,5 +48,17 @@ export const dictionary = {
     editProfile: "Edit Profile",
     logout: "Log Out",
     lastTx: "Monthly Salary",
+    incomeTitle: "Income",
+    totalIncome: "Total Income",
+    sourcesBreakdown: "Sources Breakdown",
+    recentTransactions: "Recent Transactions",
+    viewReport: "View Report",
+    filter: "Filter",
+    addIncome: "Add Income",
+    contribution: "contribution",
+    noData: "No income data found.",
+    month: {
+        thisMonth: "This Month"
+    }
   },
 };
