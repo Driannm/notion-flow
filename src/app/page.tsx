@@ -21,6 +21,9 @@ import {
   Sun,
   LogOut,
   User,
+  MapPinCheckIcon,
+  CheckCheckIcon,
+  CheckCircle,
 } from "lucide-react";
 
 export default function MainDashboard() {
@@ -54,7 +57,7 @@ export default function MainDashboard() {
       <div className="pt-8 pb-6 px-6 flex items-center justify-between">
         <div>
           <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">
-            NOTION OS
+            NOTION UI
           </h2>
           {/* Menggunakan t.greeting */}
           <h1 className="text-2xl font-extrabold tracking-tight">
@@ -80,7 +83,7 @@ export default function MainDashboard() {
       <div className="px-6 pb-24">
         {/* WIDGET FINANCE */}
         <Link href="/finance">
-          <div className="group relative w-full bg-zinc-900 dark:bg-zinc-900 rounded-[2rem] p-6 text-white shadow-xl shadow-zinc-300/50 dark:shadow-black/50 mb-6 overflow-hidden transition-transform active:scale-98">
+          <div className="group relative w-full bg-zinc-600 dark:bg-zinc-900 rounded-[2rem] p-6 text-white shadow-xl shadow-zinc-300/50 dark:shadow-black/50 mb-6 overflow-hidden transition-transform active:scale-98">
             {/* ... dekorasi background ... */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-zinc-800 rounded-full blur-3xl opacity-50 -mr-10 -mt-10 pointer-events-none"></div>
 
@@ -153,6 +156,44 @@ export default function MainDashboard() {
             </div>
           </button>
 
+          {/* Trip Planner */}
+          <button className="col-span-1 text-left">
+            <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm h-48 flex flex-col justify-between hover:shadow-md transition-all active:scale-95 cursor-pointer relative overflow-hidden">
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity dark:opacity-10 dark:text-white">
+                <MapPinCheckIcon className="w-24 h-24" />
+              </div>
+
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-500">
+                <MapPinCheckIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
+                  {t.tripPlanner}
+                </h4>
+                <p className="text-xs text-zinc-400 mt-1">{t.comingSoon}</p>
+              </div>
+            </div>
+          </button>
+          
+          {/* Trip Planner */}
+          <button className="col-span-1 text-left">
+            <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm h-48 flex flex-col justify-between hover:shadow-md transition-all active:scale-95 cursor-pointer relative overflow-hidden">
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity dark:opacity-10 dark:text-white">
+                <CheckCircle className="w-24 h-24" />
+              </div>
+
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-500">
+                <CheckCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
+                  {t.comingSoon}
+                </h4>
+                <p className="text-xs text-zinc-400 mt-1">{t.comingSoon}</p>
+              </div>
+            </div>
+          </button>
+
           {/* WISHLIST */}
           <div className="col-span-2">
             <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm flex items-center justify-between hover:shadow-md transition-all active:scale-98 cursor-pointer">
@@ -175,11 +216,11 @@ export default function MainDashboard() {
         </div>
 
         {/* FOOTER */}
-        <div className="mt-10 text-center opacity-30 dark:opacity-20">
+        {/* <div className="mt-10 text-center opacity-30 dark:opacity-20">
           <p className="text-[10px] uppercase font-bold tracking-widest mb-2">
             {t.designed}
           </p>
-        </div>
+        </div> */}
       </div>
 
       {/* --- SETTINGS MODAL --- */}
@@ -204,23 +245,6 @@ export default function MainDashboard() {
               >
                 <X className="w-5 h-5" />
               </button>
-            </div>
-
-            {/* PROFILE SHORT */}
-            <div className="flex items-center gap-4 mb-8 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-              <div className="w-12 h-12 rounded-full overflow-hidden">
-                <img
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <h3 className="font-bold text-zinc-900 dark:text-zinc-100">
-                  Sayang
-                </h3>
-                <p className="text-xs text-zinc-500">Premium User</p>
-              </div>
             </div>
 
             <div className="space-y-4">
@@ -297,27 +321,6 @@ export default function MainDashboard() {
               </div>
 
               <div className="h-px bg-zinc-100 dark:bg-zinc-800 my-4" />
-
-              {/* 3. EDIT PROFILE */}
-              <button className="w-full flex items-center gap-3 p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-xl transition-colors text-left">
-                <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 flex items-center justify-center">
-                  <User className="w-5 h-5" />
-                </div>
-                <div className="flex-1">
-                  <span className="font-medium dark:text-zinc-200 block text-sm">
-                    {t.editProfile}
-                  </span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-zinc-300" />
-              </button>
-            </div>
-
-            {/* LOGOUT */}
-            <div className="mt-8">
-              <button className="w-full py-4 rounded-xl border border-red-100 dark:border-red-900/30 text-red-500 bg-red-50 dark:bg-red-900/10 font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors">
-                <LogOut className="w-4 h-4" />
-                {t.logout}
-              </button>
             </div>
           </div>
         </div>
