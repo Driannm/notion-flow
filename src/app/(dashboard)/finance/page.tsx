@@ -169,7 +169,7 @@ export default async function FinanceDashboardV3() {
         {/* 4. Debts & Loans Grid */}
         <div className="grid grid-cols-2 gap-3">
           {/* Loans (Piutang / Uang kita di orang) */}
-          <Link href="/finance/debts?tab=loans" className="block group">
+          <Link href="/finance/debts-loans" className="block group">
             <div className="bg-white dark:bg-zinc-900 p-5 rounded-[1.8rem] border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-98 h-full flex flex-col justify-between relative overflow-hidden">
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <div className="w-10 h-10 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
@@ -188,7 +188,7 @@ export default async function FinanceDashboardV3() {
           </Link>
 
           {/* Debts (Hutang Kita) */}
-          <Link href="/finance/debts" className="block group">
+          <Link href="/finance/debts-loans" className="block group">
             <div className="bg-white dark:bg-zinc-900 p-5 rounded-[1.8rem] border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-98 h-full flex flex-col justify-between relative overflow-hidden">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 bg-amber-50 dark:bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400">
@@ -303,14 +303,14 @@ export default async function FinanceDashboardV3() {
                   </DropdownMenuItem>
                 </Link>
                 
-                <Link href="/finance/debts/add?type=debt">
+                <Link href="/finance/debts-loans/add?type=debt">
                   <DropdownMenuItem className="gap-2 cursor-pointer py-2.5 rounded-xl focus:bg-amber-50 dark:focus:bg-amber-900/30 focus:text-amber-600 dark:focus:text-amber-400">
                     <WalletCards className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     <span>Add Debt</span>
                   </DropdownMenuItem>
                 </Link>
                 
-                <Link href="/finance/debts/add?type=loan">
+                <Link href="/finance/debts-loans/add?type=loan">
                   <DropdownMenuItem className="gap-2 cursor-pointer py-2.5 rounded-xl focus:bg-blue-50 dark:focus:bg-blue-900/30 focus:text-blue-600 dark:focus:text-blue-400">
                     <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <span>Add Loan</span>
