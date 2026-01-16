@@ -1,4 +1,4 @@
-import { Inter, Bricolage_Grotesque } from "next/font/google";
+import { Inter, Bricolage_Grotesque, Space_Grotesk } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { Toaster } from "@/components/ui/sonner";
@@ -20,6 +20,13 @@ const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage_grotesque",
 });
 
+const space = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "700"],
+  variable: "--font-space_grotesk",
+});
+
 export default function RootLayout({
   children,
 }: {
@@ -28,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${bricolage.variable} font-sans antialiased`}
+        className={`${inter.variable} ${bricolage.variable} ${space.variable} font-sans antialiased`}
       >
         <ThemeProvider
           attribute="class"

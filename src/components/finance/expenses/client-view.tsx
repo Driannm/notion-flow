@@ -256,7 +256,7 @@ export default function ExpensesClientView({ initialData }: Props) {
 
                 {/* Main Amount */}
                 <div>
-                  <div className="text-3xl font-bold mb-1">
+                  <div className="text-3xl font-bold mb-1 font-mono">
                     {formatCurrency(currentStats.total)}
                   </div>
                   <div className="text-xs text-red-100/80">
@@ -270,24 +270,24 @@ export default function ExpensesClientView({ initialData }: Props) {
                     <div className="text-[10px] text-red-100 uppercase opacity-70 mb-1 flex items-center gap-1">
                       <Receipt className="w-3 h-3" /> Subtotal
                     </div>
-                    <div className="font-semibold text-sm">
-                      {formatCurrency(currentStats.subtotal).replace("Rp", "")}
+                    <div className="font-semibold text-sm font-mono">
+                      {formatCurrency(currentStats.subtotal)}
                     </div>
                   </div>
                   <div>
                     <div className="text-[10px] text-red-100 uppercase opacity-70 mb-1 flex items-center gap-1">
                       <Truck className="w-3 h-3" /> Fees
                     </div>
-                    <div className="font-semibold text-sm">
-                      {formatCurrency(currentStats.fee).replace("Rp", "")}
+                    <div className="font-semibold text-sm font-mono">
+                      {formatCurrency(currentStats.fee)}
                     </div>
                   </div>
                   <div>
                     <div className="text-[10px] text-red-100 uppercase opacity-70 mb-1 flex items-center gap-1">
                       <Percent className="w-3 h-3" /> Save
                     </div>
-                    <div className="font-semibold text-sm">
-                      {formatCurrency(currentStats.discount).replace("Rp", "")}
+                    <div className="font-semibold text-sm font-mono">
+                      {formatCurrency(currentStats.discount)}
                     </div>
                   </div>
                 </div>
@@ -370,13 +370,13 @@ export default function ExpensesClientView({ initialData }: Props) {
                         <h4 className="font-semibold text-sm truncate pr-2">
                           {item.title}
                         </h4>
-                        <span className="font-semibold text-sm text-red-500 shrink-0">
-                          - {formatCurrency(item.amount).replace("Rp", "")}
+                        <span className="font-semibold text-sm text-red-500 shrink-0 font-mono">
+                          - {formatCurrency(item.amount)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-xs text-muted-foreground">
-                          {item.category} • {item.paymentMethod}
+                          {item.paymentMethod}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {item.date}

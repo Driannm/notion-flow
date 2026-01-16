@@ -249,8 +249,8 @@ export default function EditExpensePage({
                 })
               : "Today"}
           </div>
-          <div className="text-center text-3xl font-bold">
-            {formatCurrency(totalAmount).replace("Rp", "Rp ")}
+          <div className="text-center text-3xl font-bold font-mono">
+            {formatCurrency(totalAmount)}
           </div>
         </div>
 
@@ -328,6 +328,7 @@ export default function EditExpensePage({
                 value={subtotal}
                 onChange={(e) => setSubtotal(e.target.value)}
                 placeholder="0"
+                className="font-mono"
               />
             </div>
 
@@ -358,6 +359,7 @@ export default function EditExpensePage({
                           type="number"
                           inputMode="numeric"
                           value={field.value}
+                          className="font-mono"
                           onChange={(e) =>
                             updateBreakdownField(field.id, e.target.value)
                           }

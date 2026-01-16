@@ -76,7 +76,7 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
           <div className="text-sm text-muted-foreground mb-4">
             {data.category}
           </div>
-          <div className="text-4xl font-bold text-foreground tracking-tight">
+          <div className="text-4xl font-bold text-foreground tracking-tight font-mono">
             {formatIDR(data.amount)}
           </div>
         </div>
@@ -139,7 +139,7 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
               {data.subtotal > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatIDR(data.subtotal)}</span>
+                  <span className="font-mono font-medium">{formatIDR(data.subtotal)}</span>
                 </div>
               )}
 
@@ -148,28 +148,28 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
                   <span className="text-muted-foreground">
                     Service Fee / Tax
                   </span>
-                  <span>{formatIDR(data.serviceFee)}</span>
+                  <span className="font-mono font-medium">{formatIDR(data.serviceFee)}</span>
                 </div>
               )}
 
               {data.shipping > 0 && (
                 <div className="flex justify-between text-sm text-blue-600">
                   <span>Shipping</span>
-                  <span>{formatIDR(data.shipping)}</span>
+                  <span className="font-mono font-medium">{formatIDR(data.shipping)}</span>
                 </div>
               )}
 
               {data.discount > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
                   <span>Discount</span>
-                  <span>- {formatIDR(data.discount)}</span>
+                  <span className="font-mono font-medium">- {formatIDR(data.discount)}</span>
                 </div>
               )}
 
               {data.additionalFee > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Additional Fee</span>
-                  <span>{formatIDR(data.additionalFee)}</span>
+                  <span className="font-mono font-medium">{formatIDR(data.additionalFee)}</span>
                 </div>
               )}
 
@@ -177,7 +177,7 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
 
               <div className="flex justify-between font-bold text-base">
                 <span>Total</span>
-                <span>{formatIDR(data.amount)}</span>
+                <span className="font-mono">{formatIDR(data.amount)}</span>
               </div>
             </div>
           )}
