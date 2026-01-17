@@ -1,11 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import * as React from "react";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion"; // 👈 Import Animation
-import { SwipeableItem } from "@/components/finance/expenses/swipeable-item";
-import { deleteExpense } from "@/app/action/finance/getExpenses";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Search,
@@ -13,16 +12,32 @@ import {
   Plus,
   Calendar,
   Loader2,
-  AlertTriangle,
   Trash2,
   ChevronLeft,
   ChevronRight,
   Receipt,
   Truck,
   Percent,
+  X,
+  ArrowUpDown,
+  Filter,
 } from "lucide-react";
+
+// UI Components
 import { Button } from "@/components/ui/button";
-import { ICON_MAP } from "@/lib/constants";
+import { Input } from "@/components/ui/input";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +49,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// Update Interface agar support breakdown fields
+// Logic & Data
+import { SwipeableItem } from "@/components/finance/expenses/swipeable-item";
+import { deleteExpense } from "@/app/action/finance/getExpenses";
+import { ICON_MAP } from "@/lib/constants";
+
+// --- TYPES ---
 interface Transaction {
   id: string;
   title: string;
@@ -43,7 +63,6 @@ interface Transaction {
   date: string;
   dateObj: Date;
   paymentMethod: string;
-  // Tambahan field (pastikan server action mengembalikan ini)
   fee?: number;
   discount?: number;
   subtotal?: number;
@@ -51,417 +70,539 @@ interface Transaction {
 
 interface Props {
   initialData: Transaction[];
-  totalExpense: number; // Ini total global (bisa diabaikan jika kita hitung ulang di client)
 }
 
+// --- HELPER FORMAT ---
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(value);
+
+const formatDateKey = (date: Date) => {
+  return date.toISOString().split("T")[0]; // YYYY-MM-DD
+};
+
+const formatDisplayDate = (date: Date) => {
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+
+  return date.toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+// --- COMPONENT START ---
 export default function ExpensesClientView({ initialData }: Props) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = React.useState("All");
 
-  // STATE BARU: 0 = Bulan Ini, 1 = Bulan Lalu
-  const [monthIndex, setMonthIndex] = React.useState(0);
-  const [direction, setDirection] = React.useState(0); // Untuk arah animasi slide
+  // --- STATE ---
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
 
-  const [deleteConfirmationId, setDeleteConfirmationId] = React.useState<
-    string | null
-  >(null);
+  // Filter States
+  const [selectedCategories, setSelectedCategories] = React.useState<string[]>(
+    []
+  );
+  const [sortOption, setSortOption] = React.useState<
+    "latest" | "highest" | "lowest"
+  >("latest");
+
+  // Card Slider State
+  const [monthIndex, setMonthIndex] = React.useState(0); // 0 = Current, 1 = Last
+  const [direction, setDirection] = React.useState(0);
+
+  // Delete State
+  const [deleteId, setDeleteId] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-  // --- LOGIC CALCULATE TOTAL PER BULAN ---
-  const currentStats = React.useMemo(() => {
-    // Tentukan target bulan berdasarkan monthIndex
+  // --- DEBOUNCE SEARCH ---
+  React.useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // --- DERIVED DATA (FILTERING & GROUPING) ---
+  const processedData = React.useMemo(() => {
+    let data = [...initialData];
+
+    // 1. Filter by Month (Slider Logic)
     const now = new Date();
     const targetDate = new Date(
       now.getFullYear(),
       now.getMonth() - monthIndex,
       1
     );
+    data = data.filter(
+      (t) =>
+        t.dateObj.getMonth() === targetDate.getMonth() &&
+        t.dateObj.getFullYear() === targetDate.getFullYear()
+    );
 
-    const targetMonth = targetDate.getMonth();
-    const targetYear = targetDate.getFullYear();
-
-    // Filter data sesuai bulan yang dipilih
-    const filteredData = initialData.filter((t) => {
-      const tDate = new Date(t.dateObj);
-      return (
-        tDate.getMonth() === targetMonth && tDate.getFullYear() === targetYear
+    // 2. Filter by Search
+    if (debouncedSearch) {
+      const lower = debouncedSearch.toLowerCase();
+      data = data.filter(
+        (t) =>
+          t.title.toLowerCase().includes(lower) ||
+          t.category.toLowerCase().includes(lower)
       );
+    }
+
+    // 3. Filter by Category
+    if (selectedCategories.length > 0) {
+      data = data.filter((t) => selectedCategories.includes(t.category));
+    }
+
+    // 4. Sort
+    if (sortOption === "highest") data.sort((a, b) => b.amount - a.amount);
+    else if (sortOption === "lowest") data.sort((a, b) => a.amount - b.amount);
+    else data.sort((a, b) => b.dateObj.getTime() - a.dateObj.getTime()); // Latest default
+
+    return { data, targetDate };
+  }, [
+    initialData,
+    monthIndex,
+    debouncedSearch,
+    selectedCategories,
+    sortOption,
+  ]);
+
+  // --- GROUPING LOGIC ---
+  const groupedTransactions = React.useMemo(() => {
+    const groups: Record<
+      string,
+      { date: Date; items: Transaction[]; total: number }
+    > = {};
+
+    processedData.data.forEach((t) => {
+      const key = formatDateKey(t.dateObj);
+      if (!groups[key]) {
+        groups[key] = { date: t.dateObj, items: [], total: 0 };
+      }
+      groups[key].items.push(t);
+      groups[key].total += t.amount;
     });
 
-    // Hitung Breakdown
-    const stats = filteredData.reduce(
+    // Sort keys descending (newest date first)
+    return Object.keys(groups)
+      .sort()
+      .reverse()
+      .map((key) => groups[key]);
+  }, [processedData.data]);
+
+  // --- STATS CALCULATION ---
+  const currentStats = React.useMemo(() => {
+    const { data } = processedData;
+    return data.reduce(
       (acc, curr) => ({
         total: acc.total + curr.amount,
-        fee: acc.fee + (curr.fee || 0), // Asumsi server return fee (shipping + service)
+        fee: acc.fee + (curr.fee || 0),
         discount: acc.discount + (curr.discount || 0),
-        subtotal: acc.subtotal + (curr.subtotal || curr.amount), // Fallback ke amount jika subtotal kosong
+        subtotal: acc.subtotal + (curr.subtotal || curr.amount),
       }),
       { total: 0, fee: 0, discount: 0, subtotal: 0 }
     );
+  }, [processedData]);
 
-    // Nama Bulan untuk Display
-    const monthName = targetDate.toLocaleDateString("id-ID", {
-      month: "long",
-      year: "numeric",
-    });
-
-    return { ...stats, monthName, dataCount: filteredData.length };
-  }, [initialData, monthIndex]);
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      maximumFractionDigits: 0,
-    }).format(value);
-
-  // --- HANDLE SWIPE CARD ---
+  // --- ACTIONS ---
   const paginate = (newDirection: number) => {
     const newIndex = monthIndex + newDirection;
-    // Batasi hanya 0 (Current) dan 1 (Previous)
     if (newIndex >= 0 && newIndex <= 1) {
       setDirection(newDirection);
       setMonthIndex(newIndex);
     }
   };
 
-  // Filter Categories & Transactions (Untuk List di bawah)
-  const categories = [
-    "All",
-    ...Array.from(new Set(initialData.map((t) => t.category))),
-  ];
-
-  // List Transaksi tetap menampilkan SEMUA atau difilter per bulan juga?
-  // Biasanya list mengikuti card yang aktif. Mari kita filter list juga.
-  const visibleTransactions = React.useMemo(() => {
-    const now = new Date();
-    const targetDate = new Date(
-      now.getFullYear(),
-      now.getMonth() - monthIndex,
-      1
-    );
-
-    return initialData.filter((t) => {
-      const tDate = new Date(t.dateObj);
-      const isSameMonth =
-        tDate.getMonth() === targetDate.getMonth() &&
-        tDate.getFullYear() === targetDate.getFullYear();
-      const isCategoryMatch = activeTab === "All" || t.category === activeTab;
-      return isSameMonth && isCategoryMatch;
-    });
-  }, [initialData, monthIndex, activeTab]);
-
-  // Logic Delete
-  const handleDeleteTrigger = (id: string) => setDeleteConfirmationId(id);
-
-  const confirmDelete = async () => {
-    if (!deleteConfirmationId) return;
+  const handleDelete = async () => {
+    if (!deleteId) return;
     setIsDeleting(true);
-    try {
-      const res = await deleteExpense(deleteConfirmationId);
-      if (res.success) {
-        setDeleteConfirmationId(null);
-        toast.success("Transaksi Dihapus", {
-          description: "Data telah dihapus.",
-          icon: <Trash2 className="w-4 h-4" />,
-        });
-        router.refresh();
-      } else {
-        toast.error("Gagal menghapus data");
-      }
-    } catch (error) {
-      toast.error("Terjadi kesalahan koneksi");
-    } finally {
-      setIsDeleting(false);
+    const res = await deleteExpense(deleteId);
+    if (res.success) {
+      setDeleteId(null);
+      toast.success("Transaction deleted");
+      router.refresh();
+    } else {
+      toast.error("Failed to delete");
     }
+    setIsDeleting(false);
   };
 
-  // Variants Animation untuk Card Slider
+  const allCategories = Array.from(new Set(initialData.map((t) => t.category)));
+
+  // Animation Variants
   const slideVariants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 100 : -100,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? 100 : -100,
-      opacity: 0,
-    }),
+    enter: (direction: number) => ({ x: direction > 0 ? 50 : -50, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (direction: number) => ({ x: direction < 0 ? 50 : -50, opacity: 0 }),
   };
 
   return (
-    <div className="w-full max-w-md min-h-screen mx-auto flex flex-col relative bg-background text-foreground shadow-2xl overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-4 border-b border-border sticky top-0 bg-background/80 backdrop-blur-md z-10">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="icon"
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans pb-32">
+      {/* 1. HEADER */}
+      <div className="sticky top-0 z-30 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
+        <div className="px-4 h-14 flex items-center justify-between">
+          <button
             onClick={() => router.back()}
-            className="-ml-2"
+            className="p-2 -ml-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="font-semibold text-lg">Expenses</div>
-          <Button variant="ghost" size="icon" className="-mr-2">
-            <Search className="w-5 h-5" />
-          </Button>
+            <ArrowLeft className="w-5 h-5 text-zinc-500" />
+          </button>
+          <span className="font-semibold text-sm">Expenses</span>
+          <div className="w-8" />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-24">
-        {/* === TOTAL EXPENSE CARD (SWIPEABLE) === */}
-        <div className="p-4 relative overflow-hidden">
-          <div className="relative h-[220px]">
-            {" "}
-            {/* Fixed height container */}
-            <AnimatePresence initial={false} custom={direction}>
-              <motion.div
-                key={monthIndex}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: "spring", stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 },
-                }}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={1}
-                onDragEnd={(e, { offset, velocity }) => {
-                  const swipe = Math.abs(offset.x) * velocity.x;
-                  if (swipe < -10000) {
-                    paginate(-1); // Swipe Left -> Next Month (Previous time)
-                  } else if (swipe > 10000) {
-                    paginate(1); // Swipe Right -> Prev Month (Current time)
-                  }
-                }}
-                className="absolute w-full h-full rounded-2xl bg-gradient-to-br from-red-600 to-red-700 text-white shadow-lg p-6 flex flex-col justify-between"
-              >
-                {/* Card Header */}
-                <div className="flex items-center justify-between">
-                  <span className="text-red-100 text-sm font-medium">
-                    Total Spending
-                  </span>
-                  <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full text-xs text-white backdrop-blur-sm">
-                    <Calendar className="w-3 h-3" />
-                    <span>{currentStats.monthName}</span>
+      <div className="pt-4 px-4 space-y-6">
+        {/* 2. SWIPEABLE TOTAL CARD */}
+        <div className="relative h-[200px] w-full">
+          <AnimatePresence initial={false} custom={direction} mode="wait">
+            <motion.div
+              key={monthIndex}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, { offset, velocity }) => {
+                const swipe = Math.abs(offset.x) * velocity.x;
+                if (swipe < -1000) paginate(-1);
+                else if (swipe > 1000) paginate(1);
+              }}
+              className="absolute w-full h-full"
+            >
+              <div className="h-full rounded-[2rem] bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 p-6 shadow-xl shadow-zinc-300/30 dark:shadow-none flex flex-col justify-between overflow-hidden relative">
+                {/* Decor */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 dark:bg-black/5 rounded-full blur-3xl -mr-8 -mt-8 pointer-events-none" />
+
+                {/* Header */}
+                <div className="flex justify-between items-start relative z-10">
+                  <div>
+                    <p className="text-zinc-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">
+                      Total Spending
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium bg-white/10 dark:bg-black/5 px-2 py-0.5 rounded-md backdrop-blur-md">
+                        {processedData.targetDate.toLocaleDateString("id-ID", {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-white/10 dark:bg-black/5 p-2 rounded-full">
+                    <Calendar className="w-5 h-5" />
                   </div>
                 </div>
 
-                {/* Main Amount */}
-                <div>
-                  <div className="text-3xl font-bold mb-1 font-mono">
+                {/* Amount */}
+                <div className="relative z-10">
+                  <h1 className="text-4xl font-extrabold tracking-tighter">
                     {formatCurrency(currentStats.total)}
-                  </div>
-                  <div className="text-xs text-red-100/80">
-                    {currentStats.dataCount} transactions recorded
-                  </div>
+                  </h1>
                 </div>
 
-                {/* Breakdown Grid */}
-                <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/20">
-                  <div>
-                    <div className="text-[10px] text-red-100 uppercase opacity-70 mb-1 flex items-center gap-1">
-                      <Receipt className="w-3 h-3" /> Subtotal
-                    </div>
-                    <div className="font-semibold text-sm font-mono">
+                {/* Breakdown Mini Grid */}
+                <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/10 dark:border-black/5 relative z-10">
+                  <div className="text-center">
+                    <p className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-0.5">
+                      Subtotal
+                    </p>
+                    <p className="text-xs font-bold font-mono">
                       {formatCurrency(currentStats.subtotal)}
-                    </div>
+                    </p>
                   </div>
-                  <div>
-                    <div className="text-[10px] text-red-100 uppercase opacity-70 mb-1 flex items-center gap-1">
-                      <Truck className="w-3 h-3" /> Fees
-                    </div>
-                    <div className="font-semibold text-sm font-mono">
+                  <div className="text-center border-l border-white/10 dark:border-black/5">
+                    <p className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-0.5">
+                      Fees
+                    </p>
+                    <p className="text-xs font-bold font-mono">
                       {formatCurrency(currentStats.fee)}
-                    </div>
+                    </p>
                   </div>
-                  <div>
-                    <div className="text-[10px] text-red-100 uppercase opacity-70 mb-1 flex items-center gap-1">
-                      <Percent className="w-3 h-3" /> Save
-                    </div>
-                    <div className="font-semibold text-sm font-mono">
+                  <div className="text-center border-l border-white/10 dark:border-black/5">
+                    <p className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-0.5">
+                      Saved
+                    </p>
+                    <p className="text-xs font-bold font-mono text-green-400 dark:text-green-600">
                       {formatCurrency(currentStats.discount)}
-                    </div>
+                    </p>
                   </div>
                 </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
 
-          {/* Dots Indicator */}
-          <div className="flex justify-center gap-2 mt-3">
-            <button
-              onClick={() => paginate(-1)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                monthIndex === 0 ? "bg-red-600 w-4" : "bg-red-200"
-              }`}
-            />
-            <button
-              onClick={() => paginate(1)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                monthIndex === 1 ? "bg-red-600 w-4" : "bg-red-200"
-              }`}
-            />
-          </div>
+                {/* Dots */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                      monthIndex === 0
+                        ? "bg-white dark:bg-black"
+                        : "bg-white/20 dark:bg-black/20"
+                    }`}
+                  />
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                      monthIndex === 1
+                        ? "bg-white dark:bg-black"
+                        : "bg-white/20 dark:bg-black/20"
+                    }`}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        {/* Categories Filters */}
-        <div className="px-4 mb-2">
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
-            <Button variant="outline" size="icon" className="shrink-0 w-9 h-9">
-              <SlidersHorizontal className="w-4 h-4" />
-            </Button>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveTab(cat)}
-                className={`px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                  activeTab === cat
-                    ? "bg-foreground text-background"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Transactions List */}
-        <div className="px-4 mt-2">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-sm">
-              {monthIndex === 0
-                ? "Recent Transactions"
-                : `Transactions in ${currentStats.monthName}`}
-            </h3>
-            <span className="text-xs text-muted-foreground">
-              {visibleTransactions.length} items
-            </span>
-          </div>
-
-          <div className="space-y-0">
-            {visibleTransactions.map((item) => {
-              const IconComponent =
-                ICON_MAP[item.category] || ICON_MAP["default"];
-
-              return (
-                <SwipeableItem
-                  key={item.id}
-                  onClick={() => router.push(`/finance/expenses/${item.id}`)}
-                  onEdit={() =>
-                    router.push(`/finance/expenses/${item.id}/edit`)
-                  }
-                  onDelete={() => handleDeleteTrigger(item.id)}
+        {/* 3. COMMAND CENTER (Sticky Search & Filter) */}
+        <div className="sticky top-[57px] z-20 -mx-4 px-4 pb-2 pt-2 bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur-xl border-b border-transparent transition-all">
+          <div className="flex gap-2">
+            <div className="relative flex-1 group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-zinc-800 transition-colors" />
+              <Input
+                placeholder="Search transaction..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 bg-zinc-100 dark:bg-zinc-900 border-none shadow-none rounded-xl h-11 focus-visible:ring-1 focus-visible:ring-zinc-300 dark:focus-visible:ring-zinc-700 placeholder:text-zinc-400"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-zinc-200 dark:bg-zinc-800 rounded-full"
                 >
-                  <div className="flex items-center gap-3 p-3 border border-border bg-card rounded-xl">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-red-500/10 text-red-500">
-                      <IconComponent className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <h4 className="font-semibold text-sm truncate pr-2">
-                          {item.title}
-                        </h4>
-                        <span className="font-semibold text-sm text-red-500 shrink-0 font-mono">
-                          - {formatCurrency(item.amount)}
-                        </span>
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            <Drawer>
+              <DrawerTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm shrink-0"
+                >
+                  <SlidersHorizontal className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                  {/* Active Indicator */}
+                  {(selectedCategories.length > 0 ||
+                    sortOption !== "latest") && (
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-zinc-900" />
+                  )}
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <div className="mx-auto w-full max-w-sm">
+                  <DrawerHeader>
+                    <DrawerTitle>Filters & Sort</DrawerTitle>
+                    <DrawerDescription>Customize your view.</DrawerDescription>
+                  </DrawerHeader>
+                  <div className="p-4 space-y-6">
+                    {/* Sort Section */}
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                        Sort By
+                      </h3>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setSortOption("latest")}
+                          className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium border transition-all ${
+                            sortOption === "latest"
+                              ? "bg-zinc-900 text-white border-zinc-900"
+                              : "bg-white border-zinc-200 text-zinc-600"
+                          }`}
+                        >
+                          Latest
+                        </button>
+                        <button
+                          onClick={() => setSortOption("highest")}
+                          className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium border transition-all ${
+                            sortOption === "highest"
+                              ? "bg-zinc-900 text-white border-zinc-900"
+                              : "bg-white border-zinc-200 text-zinc-600"
+                          }`}
+                        >
+                          Highest
+                        </button>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs text-muted-foreground">
-                          {item.paymentMethod}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.date}
-                        </p>
+                    </div>
+
+                    <Separator />
+
+                    {/* Category Section */}
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                          Categories
+                        </h3>
+                        {selectedCategories.length > 0 && (
+                          <button
+                            onClick={() => setSelectedCategories([])}
+                            className="text-xs text-red-500 font-medium"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {allCategories.map((cat) => (
+                          <button
+                            key={cat}
+                            onClick={() => {
+                              if (selectedCategories.includes(cat)) {
+                                setSelectedCategories((prev) =>
+                                  prev.filter((c) => c !== cat)
+                                );
+                              } else {
+                                setSelectedCategories((prev) => [...prev, cat]);
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                              selectedCategories.includes(cat)
+                                ? "bg-zinc-900 text-white border-zinc-900"
+                                : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                            }`}
+                          >
+                            {cat}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
-                </SwipeableItem>
-              );
-            })}
-
-            {visibleTransactions.length === 0 && (
-              <div className="text-center py-10 text-muted-foreground text-sm">
-                No transactions found for {currentStats.monthName}.
-              </div>
-            )}
+                  <DrawerFooter>
+                    <DrawerClose asChild>
+                      <Button className="w-full h-12 rounded-xl text-base">
+                        Show Results
+                      </Button>
+                    </DrawerClose>
+                  </DrawerFooter>
+                </div>
+              </DrawerContent>
+            </Drawer>
           </div>
+        </div>
+
+        {/* 4. GROUPED TRANSACTIONS LIST */}
+        <div className="space-y-6">
+          {groupedTransactions.length > 0 ? (
+            groupedTransactions.map((group) => (
+              <div key={formatDateKey(group.date)} className="space-y-2">
+                {/* Group Header */}
+                <div className="flex justify-between items-end px-2">
+                  <h3 className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                    {formatDisplayDate(group.date)}
+                  </h3>
+                  <span className="text-xs font-mono font-medium text-zinc-400 font-semibold">
+                    {formatCurrency(group.total)}
+                  </span>
+                </div>
+
+                {/* Items */}
+                <div className="space-y-2 ">
+                  {group.items.map((item) => {
+                    const Icon = ICON_MAP[item.category] || ICON_MAP["default"];
+
+                    return (
+                      <SwipeableItem
+                        
+                        key={item.id}
+                        onClick={() =>
+                          router.push(`/finance/expenses/${item.id}`)
+                        }
+                        onEdit={() =>
+                          router.push(`/finance/expenses/${item.id}/edit`)
+                        }
+                        onDelete={() => setDeleteId(item.id)}
+                      >
+                        <div
+                          className="
+                          flex items-center gap-4 p-4 bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-300 dark:border-white shadow-md hover:bg-zinc-50/60 dark:hover:bg-zinc-800/60 transition-colors"                        
+                        >
+                          {/* Icon */}
+                          <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 text-red-400">
+                            <Icon className="w-5 h-5" />
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-center mb-0.5">
+                              <h4 className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 truncate pr-2">
+                                {item.title}
+                              </h4>
+                              <span className="font-bold text-sm font-mono text-red-500 dark:text-red-400">
+                                {formatCurrency(item.amount)}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-zinc-400 truncate">
+                              {item.paymentMethod}
+                            </p>
+                          </div>
+                        </div>
+                      </SwipeableItem>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="py-20 flex flex-col items-center justify-center text-zinc-300 dark:text-zinc-700 opacity-50">
+              <Search className="w-16 h-16 mb-4 stroke-1" />
+              <p className="text-sm font-medium">No expenses found.</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* FAB */}
+      {/* FAB (Floating Action Button) */}
       <div className="fixed bottom-6 right-1/2 translate-x-1/2 max-w-md w-full px-4 flex justify-end pointer-events-none z-50">
         <Button
-          className="h-14 w-14 rounded-full shadow-xl bg-red-600 hover:bg-red-700 pointer-events-auto flex items-center justify-center"
+          className="h-14 w-14 rounded-[1.2rem] shadow-xl shadow-zinc-400/30 dark:shadow-black/50 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-black pointer-events-auto flex items-center justify-center transition-transform active:scale-90"
           onClick={() => router.push("/finance/expenses/add")}
         >
-          <Plus className="w-6 h-6 text-white" />
+          <Plus className="w-6 h-6" />
         </Button>
       </div>
 
-      {/* 👇 iOS STYLE ALERT DIALOG (Adaptive Dark/Light) */}
+      {/* DELETE DIALOG */}
       <AlertDialog
-        open={!!deleteConfirmationId}
-        onOpenChange={(open) => !open && setDeleteConfirmationId(null)}
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
       >
-        <AlertDialogContent
-          className="p-0 border-0 rounded-[14px] w-[270px] sm:w-[320px] max-w-none gap-0 shadow-2xl overflow-hidden backdrop-blur-xl 
-          data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95
-          bg-white/85 dark:bg-zinc-900/95 
-          text-zinc-900 dark:text-white"
-        >
-          {/* HEADER SECTION */}
-          <div className="p-5 text-center space-y-1">
-            <AlertDialogTitle className="text-[17px] font-semibold leading-snug">
-              Delete Transaction?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-[13px] leading-normal text-zinc-500 dark:text-zinc-400">
-              This action cannot be undone. Are you sure you want to delete
-              this?
+        <AlertDialogContent className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-0 rounded-[1.5rem] w-[300px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center">Delete?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-xs">
+              Permanently remove this record from Notion.
             </AlertDialogDescription>
-          </div>
-
-          {/* BUTTONS SECTION (GRID LAYOUT) */}
-          <div className="flex flex-row border-t border-zinc-900/5 dark:border-white/15">
-            {/* CANCEL BUTTON */}
-            <AlertDialogCancel
-              disabled={isDeleting}
-              className="flex-1 h-11 m-0 rounded-none border-0 bg-transparent text-[17px] font-normal focus:ring-0 active:scale-100 transition-colors
-              text-blue-600 dark:text-blue-500 
-              hover:bg-zinc-900/5 dark:hover:bg-white/10"
-            >
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2 justify-center sm:justify-center">
+            <AlertDialogCancel className="flex-1 rounded-xl h-10 border-0 bg-zinc-100 dark:bg-zinc-800">
               Cancel
             </AlertDialogCancel>
-
-            {/* SEPARATOR (Vertical Line) */}
-            <div className="w-[1px] bg-zinc-900/5 dark:bg-white/15" />
-
-            {/* ACTION BUTTON (DELETE) */}
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
-                confirmDelete();
+                handleDelete();
               }}
+              className="flex-1 rounded-xl h-10 bg-red-500 hover:bg-red-600 text-white"
               disabled={isDeleting}
-              className="flex-1 h-11 m-0 rounded-none border-0 bg-transparent text-[17px] font-semibold focus:ring-0 active:scale-100 transition-colors
-              text-red-600 dark:text-red-500 
-              hover:bg-zinc-900/5 dark:hover:bg-white/10"
             >
               {isDeleting ? (
-                <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 "Delete"
               )}
             </AlertDialogAction>
-          </div>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
