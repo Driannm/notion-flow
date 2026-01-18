@@ -13,6 +13,7 @@ import {
   Home,
   PiggyBank,
   Receipt,
+  Wallet,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -57,7 +58,6 @@ export default async function FinanceDashboardV3() {
 
   return (
     <div className="w-full max-w-md min-h-screen mx-auto flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans pb-24 transition-colors duration-300">
-      
       {/* 1. Header Navigation */}
       <div className="px-6 pt-8 pb-4 flex items-center justify-between sticky top-0 bg-zinc-50/90 dark:bg-zinc-950/90 backdrop-blur-sm z-20 transition-colors">
         <div className="flex items-center gap-3">
@@ -73,13 +73,12 @@ export default async function FinanceDashboardV3() {
       </div>
 
       <div className="px-6 space-y-4">
-        
         {/* 2. Hero Card: Net Flow & Budget Health */}
         <div
           className={`p-6 rounded-[2rem] shadow-xl shadow-zinc-300/40 dark:shadow-none text-white relative overflow-hidden transition-colors duration-500 ${
-            isPositiveFlow 
-                ? "bg-zinc-900 dark:bg-zinc-800" 
-                : "bg-red-600 dark:bg-red-800"
+            isPositiveFlow
+              ? "bg-zinc-900 dark:bg-zinc-800"
+              : "bg-red-600 dark:bg-red-800"
           }`}
         >
           <div className="relative z-10">
@@ -98,8 +97,8 @@ export default async function FinanceDashboardV3() {
               )}
             </div>
 
-            <div className="text-4xl font-extrabold tracking-tight mb-4 text-white">
-              {formatCurrency(stats.netFlow).replace("Rp", "Rp ")}
+            <div className="text-4xl font-extrabold tracking-tight mb-4 text-white font-mono">
+              {formatCurrency(stats.netFlow)}
             </div>
 
             {/* Visual Budget Bar */}
@@ -137,8 +136,8 @@ export default async function FinanceDashboardV3() {
                 <div className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">
                   Income
                 </div>
-                <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                  {formatCurrency(stats.income).replace("Rp", "IDR")}
+                <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate font-mono">
+                  {formatCurrency(stats.income)}
                 </div>
               </div>
             </div>
@@ -158,8 +157,8 @@ export default async function FinanceDashboardV3() {
                 <div className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">
                   Expense
                 </div>
-                <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                  {formatCurrency(stats.expenses).replace("Rp", "IDR")}
+                <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate font-mono">
+                  {formatCurrency(stats.expenses)}
                 </div>
               </div>
             </div>
@@ -171,17 +170,20 @@ export default async function FinanceDashboardV3() {
           {/* Loans (Piutang / Uang kita di orang) */}
           <Link href="/finance/debts-loans" className="block group">
             <div className="bg-white dark:bg-zinc-900 p-5 rounded-[1.8rem] border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-98 h-full flex flex-col justify-between relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                <TrendingUp className="w-16 h-16 text-blue-600 dark:text-blue-500" />
+              </div>
               <div className="flex items-center justify-between mb-4 relative z-10">
                 <div className="w-10 h-10 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
-                  <WalletCards className="w-5 h-5" />
+                  <Wallet className="w-5 h-5" />
                 </div>
               </div>
               <div className="relative z-10">
                 <div className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">
                   Loans
                 </div>
-                <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                  {formatCurrency(stats.loans).replace("Rp", "IDR")}
+                <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate font-mono">
+                  {formatCurrency(stats.loans)}
                 </div>
               </div>
             </div>
@@ -190,17 +192,20 @@ export default async function FinanceDashboardV3() {
           {/* Debts (Hutang Kita) */}
           <Link href="/finance/debts-loans" className="block group">
             <div className="bg-white dark:bg-zinc-900 p-5 rounded-[1.8rem] border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-98 h-full flex flex-col justify-between relative overflow-hidden">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                <TrendingDown className="w-16 h-16 text-amber-600 dark:text-amber-500" />
+              </div>
+              <div className="flex items-center justify-between mb-4 relative z-10">
                 <div className="w-10 h-10 bg-amber-50 dark:bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400">
-                  <PiggyBank className="w-5 h-5" />
+                  <WalletCards className="w-5 h-5" />
                 </div>
               </div>
               <div className="relative z-10">
                 <div className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-1">
                   My Debts
                 </div>
-                <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate">
-                  {formatCurrency(stats.debts).replace("Rp", "IDR")}
+                <div className="text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate font-mono">
+                  {formatCurrency(stats.debts)}
                 </div>
               </div>
             </div>
@@ -237,8 +242,8 @@ export default async function FinanceDashboardV3() {
                         {cat.name}
                       </span>
                     </div>
-                    <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                      {formatCurrency(cat.value).replace("Rp", "IDR")}
+                    <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 font-mono">
+                      {formatCurrency(cat.value)}
                     </span>
                   </div>
                 );
@@ -281,35 +286,35 @@ export default async function FinanceDashboardV3() {
                   Add Transaction
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800" />
-                
+
                 <Link href="/finance/expenses/add">
                   <DropdownMenuItem className="gap-2 cursor-pointer py-2.5 rounded-xl focus:bg-red-50 dark:focus:bg-red-900/30 focus:text-red-600 dark:focus:text-red-400">
                     <TrendingDown className="w-4 h-4 text-red-500 dark:text-red-400" />
                     <span>Add Expense</span>
                   </DropdownMenuItem>
                 </Link>
-                
+
                 <Link href="/finance/income/add">
                   <DropdownMenuItem className="gap-2 cursor-pointer py-2.5 rounded-xl focus:bg-green-50 dark:focus:bg-green-900/30 focus:text-green-600 dark:focus:text-green-400">
                     <TrendingUp className="w-4 h-4 text-green-500 dark:text-green-400" />
                     <span>Add Income</span>
                   </DropdownMenuItem>
                 </Link>
-                
+
                 <Link href="/finance/transfer/add">
                   <DropdownMenuItem className="gap-2 cursor-pointer py-2.5 rounded-xl focus:bg-blue-50 dark:focus:bg-blue-900/30 focus:text-blue-600 dark:focus:text-blue-400">
                     <ArrowLeftRight className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                     <span>Add Transfer</span>
                   </DropdownMenuItem>
                 </Link>
-                
+
                 <Link href="/finance/debts-loans/add?type=debt">
                   <DropdownMenuItem className="gap-2 cursor-pointer py-2.5 rounded-xl focus:bg-amber-50 dark:focus:bg-amber-900/30 focus:text-amber-600 dark:focus:text-amber-400">
                     <WalletCards className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     <span>Add Debt</span>
                   </DropdownMenuItem>
                 </Link>
-                
+
                 <Link href="/finance/debts-loans/add?type=loan">
                   <DropdownMenuItem className="gap-2 cursor-pointer py-2.5 rounded-xl focus:bg-blue-50 dark:focus:bg-blue-900/30 focus:text-blue-600 dark:focus:text-blue-400">
                     <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400" />
