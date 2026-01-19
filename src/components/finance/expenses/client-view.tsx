@@ -5,25 +5,16 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import {
-  ArrowLeft,
-  Search,
-  SlidersHorizontal,
-  Plus,
-  Calendar,
-  Loader2,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  Receipt,
-  Truck,
-  Percent,
-  X,
-  ArrowUpDown,
-  Filter,
-} from "lucide-react";
+import { Calendar, ChevronLeft, Search, SlidersHorizontal, X, Plus } from "lucide-react";
 
-// UI Components
+// Client Components yang kita PAKAI:
+import EmptyState from "@/components/finance/EmptyState";
+import FloatingActionButton from "@/components/finance/FloatingActionButton";
+import StatsCard from "@/components/finance/StatsCard";
+
+// Component lain yang masih manual:
+import { SwipeableItem } from "@/components/finance/SwipeableItem";
+import DeleteAlertDialog from "@/components/finance/AlertDelete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,21 +27,9 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 // Logic & Data
-import { SwipeableItem } from "@/components/finance/expenses/swipeable-item";
 import { deleteExpense } from "@/app/action/finance/getExpenses";
 import { ICON_MAP } from "@/lib/constants";
 
@@ -80,9 +59,7 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const formatDateKey = (date: Date) => {
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
-};
+const formatDateKey = (date: Date) => date.toISOString().split("T")[0];
 
 const formatDisplayDate = (date: Date) => {
   const today = new Date();
@@ -106,20 +83,10 @@ export default function ExpensesClientView({ initialData }: Props) {
   // --- STATE ---
   const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
-
-  // Filter States
-  const [selectedCategories, setSelectedCategories] = React.useState<string[]>(
-    []
-  );
-  const [sortOption, setSortOption] = React.useState<
-    "latest" | "highest" | "lowest"
-  >("latest");
-
-  // Card Slider State
-  const [monthIndex, setMonthIndex] = React.useState(0); // 0 = Current, 1 = Last
+  const [selectedCategories, setSelectedCategories] = React.useState<string[]>([]);
+  const [sortOption, setSortOption] = React.useState<"latest" | "highest" | "lowest">("latest");
+  const [monthIndex, setMonthIndex] = React.useState(0);
   const [direction, setDirection] = React.useState(0);
-
-  // Delete State
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
 
@@ -129,17 +96,13 @@ export default function ExpensesClientView({ initialData }: Props) {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // --- DERIVED DATA (FILTERING & GROUPING) ---
+  // --- FILTER & SORT LOGIC ---
   const processedData = React.useMemo(() => {
     let data = [...initialData];
 
-    // 1. Filter by Month (Slider Logic)
+    // 1. Filter by Month
     const now = new Date();
-    const targetDate = new Date(
-      now.getFullYear(),
-      now.getMonth() - monthIndex,
-      1
-    );
+    const targetDate = new Date(now.getFullYear(), now.getMonth() - monthIndex, 1);
     data = data.filter(
       (t) =>
         t.dateObj.getMonth() === targetDate.getMonth() &&
@@ -164,23 +127,14 @@ export default function ExpensesClientView({ initialData }: Props) {
     // 4. Sort
     if (sortOption === "highest") data.sort((a, b) => b.amount - a.amount);
     else if (sortOption === "lowest") data.sort((a, b) => a.amount - b.amount);
-    else data.sort((a, b) => b.dateObj.getTime() - a.dateObj.getTime()); // Latest default
+    else data.sort((a, b) => b.dateObj.getTime() - a.dateObj.getTime());
 
     return { data, targetDate };
-  }, [
-    initialData,
-    monthIndex,
-    debouncedSearch,
-    selectedCategories,
-    sortOption,
-  ]);
+  }, [initialData, monthIndex, debouncedSearch, selectedCategories, sortOption]);
 
   // --- GROUPING LOGIC ---
   const groupedTransactions = React.useMemo(() => {
-    const groups: Record<
-      string,
-      { date: Date; items: Transaction[]; total: number }
-    > = {};
+    const groups: Record<string, { date: Date; items: Transaction[]; total: number }> = {};
 
     processedData.data.forEach((t) => {
       const key = formatDateKey(t.dateObj);
@@ -191,7 +145,6 @@ export default function ExpensesClientView({ initialData }: Props) {
       groups[key].total += t.amount;
     });
 
-    // Sort keys descending (newest date first)
     return Object.keys(groups)
       .sort()
       .reverse()
@@ -246,22 +199,22 @@ export default function ExpensesClientView({ initialData }: Props) {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans pb-32">
-      {/* 1. HEADER */}
+      {/* 1. HEADER (Manual) */}
       <div className="sticky top-0 z-30 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
         <div className="px-4 h-14 flex items-center justify-between">
           <button
             onClick={() => router.back()}
             className="p-2 -ml-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-zinc-500" />
+            <ChevronLeft className="w-5 h-5 text-zinc-500" />
           </button>
-          <span className="font-semibold text-sm">Expenses</span>
+          <span className="font-semibold text-sm uppercase tracking-wider">Expenses</span>
           <div className="w-8" />
         </div>
       </div>
 
       <div className="pt-4 px-4 space-y-6">
-        {/* 2. SWIPEABLE TOTAL CARD */}
+        {/* 2. STATS CARD (Client Component) */}
         <div className="relative h-[200px] w-full">
           <AnimatePresence initial={false} custom={direction} mode="wait">
             <motion.div
@@ -282,88 +235,32 @@ export default function ExpensesClientView({ initialData }: Props) {
               }}
               className="absolute w-full h-full"
             >
-              <div className="h-full rounded-[2rem] bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 p-6 shadow-xl shadow-zinc-300/30 dark:shadow-none flex flex-col justify-between overflow-hidden relative">
-                {/* Decor */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 dark:bg-black/5 rounded-full blur-3xl -mr-8 -mt-8 pointer-events-none" />
-
-                {/* Header */}
-                <div className="flex justify-between items-start relative z-10">
-                  <div>
-                    <p className="text-zinc-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">
-                      Total Spending
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium bg-white/10 dark:bg-black/5 px-2 py-0.5 rounded-md backdrop-blur-md">
-                        {processedData.targetDate.toLocaleDateString("id-ID", {
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="bg-white/10 dark:bg-black/5 p-2 rounded-full">
-                    <Calendar className="w-5 h-5" />
-                  </div>
-                </div>
-
-                {/* Amount */}
-                <div className="relative z-10">
-                  <h1 className="text-4xl font-extrabold tracking-tighter">
-                    {formatCurrency(currentStats.total)}
-                  </h1>
-                </div>
-
-                {/* Breakdown Mini Grid */}
-                <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/10 dark:border-black/5 relative z-10">
-                  <div className="text-center">
-                    <p className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-0.5">
-                      Subtotal
-                    </p>
-                    <p className="text-xs font-bold font-mono">
-                      {formatCurrency(currentStats.subtotal)}
-                    </p>
-                  </div>
-                  <div className="text-center border-l border-white/10 dark:border-black/5">
-                    <p className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-0.5">
-                      Fees
-                    </p>
-                    <p className="text-xs font-bold font-mono">
-                      {formatCurrency(currentStats.fee)}
-                    </p>
-                  </div>
-                  <div className="text-center border-l border-white/10 dark:border-black/5">
-                    <p className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-0.5">
-                      Saved
-                    </p>
-                    <p className="text-xs font-bold font-mono text-green-400 dark:text-green-600">
-                      {formatCurrency(currentStats.discount)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Dots */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                      monthIndex === 0
-                        ? "bg-white dark:bg-black"
-                        : "bg-white/20 dark:bg-black/20"
-                    }`}
-                  />
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                      monthIndex === 1
-                        ? "bg-white dark:bg-black"
-                        : "bg-white/20 dark:bg-black/20"
-                    }`}
-                  />
-                </div>
-              </div>
+              <StatsCard
+                title="Total Spending"
+                mainValue={formatCurrency(currentStats.total)}
+                mainIcon={<Calendar className="w-5 h-5" />}
+                subtitle={processedData.targetDate.toLocaleDateString("id-ID", {
+                  month: "long",
+                  year: "numeric",
+                })}
+                theme="expense"
+                stats={[
+                  { label: "Subtotal", value: formatCurrency(currentStats.subtotal), icon: null },
+                  { label: "Fees", value: formatCurrency(currentStats.fee), icon: null },
+                  { label: "Saved", value: formatCurrency(currentStats.discount), icon: null },
+                ]}
+                swipeable={true}
+                currentIndex={monthIndex}
+                totalPages={2}
+                onSwipe={paginate}
+                direction={direction}
+                className="h-full"
+              />
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* 3. COMMAND CENTER (Sticky Search & Filter) */}
+        {/* 3. SEARCH & FILTER (Manual) */}
         <div className="sticky top-[57px] z-20 -mx-4 px-4 pb-2 pt-2 bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur-xl border-b border-transparent transition-all">
           <div className="flex gap-2">
             <div className="relative flex-1 group">
@@ -392,9 +289,7 @@ export default function ExpensesClientView({ initialData }: Props) {
                   className="h-11 w-11 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm shrink-0"
                 >
                   <SlidersHorizontal className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
-                  {/* Active Indicator */}
-                  {(selectedCategories.length > 0 ||
-                    sortOption !== "latest") && (
+                  {(selectedCategories.length > 0 || sortOption !== "latest") && (
                     <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-zinc-900" />
                   )}
                 </Button>
@@ -490,7 +385,7 @@ export default function ExpensesClientView({ initialData }: Props) {
           </div>
         </div>
 
-        {/* 4. GROUPED TRANSACTIONS LIST */}
+        {/* 4. TRANSACTIONS LIST (Manual dengan SwipeableItem) */}
         <div className="space-y-6">
           {groupedTransactions.length > 0 ? (
             groupedTransactions.map((group) => (
@@ -505,27 +400,19 @@ export default function ExpensesClientView({ initialData }: Props) {
                   </span>
                 </div>
 
-                {/* Items */}
-                <div className="space-y-2 ">
+                {/* Transaction Items (Manual) */}
+                <div className="space-y-2">
                   {group.items.map((item) => {
                     const Icon = ICON_MAP[item.category] || ICON_MAP["default"];
 
                     return (
                       <SwipeableItem
-                        
                         key={item.id}
-                        onClick={() =>
-                          router.push(`/finance/expenses/${item.id}`)
-                        }
-                        onEdit={() =>
-                          router.push(`/finance/expenses/${item.id}/edit`)
-                        }
+                        onClick={() => router.push(`/finance/expenses/${item.id}`)}
+                        onEdit={() => router.push(`/finance/expenses/${item.id}/edit`)}
                         onDelete={() => setDeleteId(item.id)}
                       >
-                        <div
-                          className="
-                          flex items-center gap-4 p-4 bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-300 dark:border-white shadow-md hover:bg-zinc-50/60 dark:hover:bg-zinc-800/60 transition-colors"                        
-                        >
+                        <div className="flex items-center gap-4 p-4 bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-300 dark:border-zinc-700 shadow-md hover:bg-zinc-50/60 dark:hover:bg-zinc-800/60 transition-colors">
                           {/* Icon */}
                           <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 text-red-400">
                             <Icon className="w-5 h-5" />
@@ -554,57 +441,48 @@ export default function ExpensesClientView({ initialData }: Props) {
               </div>
             ))
           ) : (
-            <div className="py-20 flex flex-col items-center justify-center text-zinc-300 dark:text-zinc-700 opacity-50">
-              <Search className="w-16 h-16 mb-4 stroke-1" />
-              <p className="text-sm font-medium">No expenses found.</p>
-            </div>
+            // EMPTY STATE (Client Component)
+            <EmptyState 
+              type="expense" 
+              title={searchTerm || selectedCategories.length > 0 ? "No matching expenses" : "No expenses yet"}
+              description={
+                searchTerm || selectedCategories.length > 0 
+                  ? "Try adjusting your search or filters"
+                  : "Add your first expense to get started"
+              }
+              actionLabel={searchTerm || selectedCategories.length > 0 ? "Clear filters" : "Add Expense"}
+              onAction={() => {
+                if (searchTerm || selectedCategories.length > 0) {
+                  setSearchTerm("");
+                  setSelectedCategories([]);
+                } else {
+                  router.push("/finance/expenses/add");
+                }
+              }}
+            />
           )}
         </div>
       </div>
 
-      {/* FAB (Floating Action Button) */}
-      <div className="fixed bottom-6 right-1/2 translate-x-1/2 max-w-md w-full px-4 flex justify-end pointer-events-none z-50">
-        <Button
-          className="h-14 w-14 rounded-[1.2rem] shadow-xl shadow-zinc-400/30 dark:shadow-black/50 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-black pointer-events-auto flex items-center justify-center transition-transform active:scale-90"
-          onClick={() => router.push("/finance/expenses/add")}
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
-      </div>
+      {/* 5. FLOATING ACTION BUTTON (Client Component) */}
+      <FloatingActionButton
+        onClick={() => router.push("/finance/expenses/add")}
+        icon="plus"
+        variant="primary"
+        position="bottom-center"
+        label="Add Expense"
+        showLabel={false}
+      />
 
-      {/* DELETE DIALOG */}
-      <AlertDialog
+      {/* 6. DELETE DIALOG */}
+      <DeleteAlertDialog
         open={!!deleteId}
         onOpenChange={(open) => !open && setDeleteId(null)}
-      >
-        <AlertDialogContent className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border-0 rounded-[1.5rem] w-[300px]">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-center">Delete?</AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-xs">
-              Permanently remove this record from Notion.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row gap-2 justify-center sm:justify-center">
-            <AlertDialogCancel className="flex-1 rounded-xl h-10 border-0 bg-zinc-100 dark:bg-zinc-800">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                handleDelete();
-              }}
-              className="flex-1 rounded-xl h-10 bg-red-500 hover:bg-red-600 text-white"
-              disabled={isDeleting}
-            >
-              {isDeleting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                "Delete"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+        title="Delete Transaction?"
+        description="This action cannot be undone. The transaction will be permanently removed."
+      />
     </div>
   );
 }

@@ -169,7 +169,11 @@ export async function getExpenseById(id: string) {
   }
 }
 
-export async function deleteExpense(id: string) {
+export async function deleteExpense(id: string): Promise<{ 
+  success: boolean; 
+  message?: string;
+  error?: string; // Tambahkan ini
+}> {
   try {
     // Soft delete (archive) in Notion
     await notion.pages.update({
