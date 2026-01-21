@@ -5,29 +5,19 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Calendar, ChevronLeft, Search, SlidersHorizontal, X, Plus } from "lucide-react";
+import {
+  Calendar,
+  ChevronLeft,
+} from "lucide-react";
+import { useFinanceFilter } from "@/hooks/UseFilter";
 
 // Client Components yang kita PAKAI:
 import EmptyState from "@/components/finance/EmptyState";
 import FloatingActionButton from "@/components/finance/FloatingActionButton";
 import StatsCard from "@/components/finance/StatsCard";
-
-// Component lain yang masih manual:
 import { SwipeableItem } from "@/components/finance/SwipeableItem";
 import DeleteAlertDialog from "@/components/finance/AlertDelete";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-import { Separator } from "@/components/ui/separator";
+import SearchFilterBar from "@/components/finance/SearchFilter";
 
 // Logic & Data
 import { deleteExpense } from "@/app/action/finance/getExpenses";
@@ -81,14 +71,28 @@ export default function ExpensesClientView({ initialData }: Props) {
   const router = useRouter();
 
   // --- STATE ---
-  const [searchTerm, setSearchTerm] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
-  const [selectedCategories, setSelectedCategories] = React.useState<string[]>([]);
-  const [sortOption, setSortOption] = React.useState<"latest" | "highest" | "lowest">("latest");
+  const [selectedCategories, setSelectedCategories] = React.useState<string[]>(
+    []
+  );
   const [monthIndex, setMonthIndex] = React.useState(0);
   const [direction, setDirection] = React.useState(0);
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const {
+    searchTerm,
+    setSearchTerm,
+    selectedFilters,
+    setSelectedFilters,
+    sortOption,
+    setSortOption,
+    allFilters,
+    filteredData,
+  } = useFinanceFilter<Transaction>({
+    initialData,
+    searchFields: ["title", "category"],
+    filterField: "category",
+  });
 
   // --- DEBOUNCE SEARCH ---
   React.useEffect(() => {
@@ -98,43 +102,31 @@ export default function ExpensesClientView({ initialData }: Props) {
 
   // --- FILTER & SORT LOGIC ---
   const processedData = React.useMemo(() => {
-    let data = [...initialData];
+    let data = [...filteredData];
 
-    // 1. Filter by Month
+    // Filter by Month
     const now = new Date();
-    const targetDate = new Date(now.getFullYear(), now.getMonth() - monthIndex, 1);
+    const targetDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - monthIndex,
+      1
+    );
+
     data = data.filter(
       (t) =>
         t.dateObj.getMonth() === targetDate.getMonth() &&
         t.dateObj.getFullYear() === targetDate.getFullYear()
     );
 
-    // 2. Filter by Search
-    if (debouncedSearch) {
-      const lower = debouncedSearch.toLowerCase();
-      data = data.filter(
-        (t) =>
-          t.title.toLowerCase().includes(lower) ||
-          t.category.toLowerCase().includes(lower)
-      );
-    }
-
-    // 3. Filter by Category
-    if (selectedCategories.length > 0) {
-      data = data.filter((t) => selectedCategories.includes(t.category));
-    }
-
-    // 4. Sort
-    if (sortOption === "highest") data.sort((a, b) => b.amount - a.amount);
-    else if (sortOption === "lowest") data.sort((a, b) => a.amount - b.amount);
-    else data.sort((a, b) => b.dateObj.getTime() - a.dateObj.getTime());
-
     return { data, targetDate };
-  }, [initialData, monthIndex, debouncedSearch, selectedCategories, sortOption]);
+  }, [filteredData, monthIndex]);
 
   // --- GROUPING LOGIC ---
   const groupedTransactions = React.useMemo(() => {
-    const groups: Record<string, { date: Date; items: Transaction[]; total: number }> = {};
+    const groups: Record<
+      string,
+      { date: Date; items: Transaction[]; total: number }
+    > = {};
 
     processedData.data.forEach((t) => {
       const key = formatDateKey(t.dateObj);
@@ -208,7 +200,9 @@ export default function ExpensesClientView({ initialData }: Props) {
           >
             <ChevronLeft className="w-5 h-5 text-zinc-500" />
           </button>
-          <span className="font-semibold text-sm uppercase tracking-wider">Expenses</span>
+          <span className="font-semibold text-sm uppercase tracking-wider">
+            Expenses
+          </span>
           <div className="w-8" />
         </div>
       </div>
@@ -245,9 +239,21 @@ export default function ExpensesClientView({ initialData }: Props) {
                 })}
                 theme="expense"
                 stats={[
-                  { label: "Subtotal", value: formatCurrency(currentStats.subtotal), icon: null },
-                  { label: "Fees", value: formatCurrency(currentStats.fee), icon: null },
-                  { label: "Saved", value: formatCurrency(currentStats.discount), icon: null },
+                  {
+                    label: "Subtotal",
+                    value: formatCurrency(currentStats.subtotal),
+                    icon: null,
+                  },
+                  {
+                    label: "Tax & Fee",
+                    value: formatCurrency(currentStats.fee),
+                    icon: null,
+                  },
+                  {
+                    label: "Saved",
+                    value: formatCurrency(currentStats.discount),
+                    icon: null,
+                  },
                 ]}
                 swipeable={true}
                 currentIndex={monthIndex}
@@ -261,129 +267,17 @@ export default function ExpensesClientView({ initialData }: Props) {
         </div>
 
         {/* 3. SEARCH & FILTER (Manual) */}
-        <div className="sticky top-[57px] z-20 -mx-4 px-4 pb-2 pt-2 bg-zinc-50/95 dark:bg-zinc-950/95 backdrop-blur-xl border-b border-transparent transition-all">
-          <div className="flex gap-2">
-            <div className="relative flex-1 group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-zinc-800 transition-colors" />
-              <Input
-                placeholder="Search transaction..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 bg-zinc-100 dark:bg-zinc-900 border-none shadow-none rounded-xl h-11 focus-visible:ring-1 focus-visible:ring-zinc-300 dark:focus-visible:ring-zinc-700 placeholder:text-zinc-400"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-zinc-200 dark:bg-zinc-800 rounded-full"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-
-            <Drawer>
-              <DrawerTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-11 w-11 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm shrink-0"
-                >
-                  <SlidersHorizontal className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
-                  {(selectedCategories.length > 0 || sortOption !== "latest") && (
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-zinc-900" />
-                  )}
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent>
-                <div className="mx-auto w-full max-w-sm">
-                  <DrawerHeader>
-                    <DrawerTitle>Filters & Sort</DrawerTitle>
-                    <DrawerDescription>Customize your view.</DrawerDescription>
-                  </DrawerHeader>
-                  <div className="p-4 space-y-6">
-                    {/* Sort Section */}
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                        Sort By
-                      </h3>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setSortOption("latest")}
-                          className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium border transition-all ${
-                            sortOption === "latest"
-                              ? "bg-zinc-900 text-white border-zinc-900"
-                              : "bg-white border-zinc-200 text-zinc-600"
-                          }`}
-                        >
-                          Latest
-                        </button>
-                        <button
-                          onClick={() => setSortOption("highest")}
-                          className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-medium border transition-all ${
-                            sortOption === "highest"
-                              ? "bg-zinc-900 text-white border-zinc-900"
-                              : "bg-white border-zinc-200 text-zinc-600"
-                          }`}
-                        >
-                          Highest
-                        </button>
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    {/* Category Section */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                          Categories
-                        </h3>
-                        {selectedCategories.length > 0 && (
-                          <button
-                            onClick={() => setSelectedCategories([])}
-                            className="text-xs text-red-500 font-medium"
-                          >
-                            Reset
-                          </button>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {allCategories.map((cat) => (
-                          <button
-                            key={cat}
-                            onClick={() => {
-                              if (selectedCategories.includes(cat)) {
-                                setSelectedCategories((prev) =>
-                                  prev.filter((c) => c !== cat)
-                                );
-                              } else {
-                                setSelectedCategories((prev) => [...prev, cat]);
-                              }
-                            }}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                              selectedCategories.includes(cat)
-                                ? "bg-zinc-900 text-white border-zinc-900"
-                                : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
-                            }`}
-                          >
-                            {cat}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <DrawerFooter>
-                    <DrawerClose asChild>
-                      <Button className="w-full h-12 rounded-xl text-base">
-                        Show Results
-                      </Button>
-                    </DrawerClose>
-                  </DrawerFooter>
-                </div>
-              </DrawerContent>
-            </Drawer>
-          </div>
-        </div>
+        <SearchFilterBar
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          placeholder="Search transaction..."
+          selectedFilters={selectedFilters}
+          onFilterChange={setSelectedFilters}
+          allFilters={allFilters}
+          filterTitle="Categories"
+          sortOption={sortOption}
+          onSortChange={setSortOption}
+        />
 
         {/* 4. TRANSACTIONS LIST (Manual dengan SwipeableItem) */}
         <div className="space-y-6">
@@ -408,8 +302,12 @@ export default function ExpensesClientView({ initialData }: Props) {
                     return (
                       <SwipeableItem
                         key={item.id}
-                        onClick={() => router.push(`/finance/expenses/${item.id}`)}
-                        onEdit={() => router.push(`/finance/expenses/${item.id}/edit`)}
+                        onClick={() =>
+                          router.push(`/finance/expenses/${item.id}`)
+                        }
+                        onEdit={() =>
+                          router.push(`/finance/expenses/${item.id}/edit`)
+                        }
                         onDelete={() => setDeleteId(item.id)}
                       >
                         <div className="flex items-center gap-4 p-4 bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-300 dark:border-zinc-700 shadow-md hover:bg-zinc-50/60 dark:hover:bg-zinc-800/60 transition-colors">
@@ -442,15 +340,23 @@ export default function ExpensesClientView({ initialData }: Props) {
             ))
           ) : (
             // EMPTY STATE (Client Component)
-            <EmptyState 
-              type="expense" 
-              title={searchTerm || selectedCategories.length > 0 ? "No matching expenses" : "No expenses yet"}
+            <EmptyState
+              type="expense"
+              title={
+                searchTerm || selectedCategories.length > 0
+                  ? "No matching expenses"
+                  : "No expenses yet"
+              }
               description={
-                searchTerm || selectedCategories.length > 0 
+                searchTerm || selectedCategories.length > 0
                   ? "Try adjusting your search or filters"
                   : "Add your first expense to get started"
               }
-              actionLabel={searchTerm || selectedCategories.length > 0 ? "Clear filters" : "Add Expense"}
+              actionLabel={
+                searchTerm || selectedCategories.length > 0
+                  ? "Clear filters"
+                  : "Add Expense"
+              }
               onAction={() => {
                 if (searchTerm || selectedCategories.length > 0) {
                   setSearchTerm("");
