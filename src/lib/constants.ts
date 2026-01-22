@@ -193,3 +193,12 @@ export const PAYMENT_GROUPS: Record<string, string[]> = {
   eWallet: ["Gopay", "Link Aja", "Shopee-Pay", "Spaylater"],
   Tunai: ["Cash"],
 };
+
+export const CARD_IDS: Record<string, string> = {
+  "Saving Account": "2ab9ec9fc1ce81b8a439d893df116825",
+  "Bank Central Asia": "2ab9ec9fc1ce81b8a439d893df116825",
+  "Livin' by Mandiri": "2e19ec9fc1ce809caa8addbea19fd941",
+  "Blu by BCA Digital": "2e19ec9fc1ce80d49f4ce1908f9f95f7",
+  "Bank Jago": "2e19ec9fc1ce80a08391d7ceb02f7ca1",
+  "Seabank": "2e19ec9fc1ce80ab828acb5bfdc0c9f5",
+};
