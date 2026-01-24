@@ -8,7 +8,7 @@ import { X, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/finance/expenses/date-picker";
-import { MoneyInput } from "@/components/MoneyInput"; // 👈 Pastikan path ini
+import { MoneyInput } from "@/components/finance/MoneyInput"; // 👈 Pastikan path ini
 import { addDebtOrLoan } from "@/app/action/finance/debtsAction"; // 👈 Cek nama file (Actions vs Action)
 
 function AddDebtForm() {

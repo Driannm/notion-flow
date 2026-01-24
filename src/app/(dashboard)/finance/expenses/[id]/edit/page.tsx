@@ -29,7 +29,7 @@ import { Label } from "@/components/ui/label";
 // Import Actions
 import { getExpenseById } from "@/app/action/finance/getExpenses";
 import { updateExpense } from "@/app/action/finance/updateExpenses";
-import { MoneyInput } from "@/components/MoneyInput";
+import { MoneyInput } from "@/components/finance/MoneyInput";
 
 type BreakdownField = {
   id: string;

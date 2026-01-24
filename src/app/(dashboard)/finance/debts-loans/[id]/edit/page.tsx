@@ -7,7 +7,7 @@ import { ChevronLeft, Loader2, Check, X, CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/finance/expenses/date-picker";
-import { MoneyInput } from "@/components/MoneyInput";
+import { MoneyInput } from "@/components/finance/MoneyInput";
 import { getDebtById, updateDebtOrLoan } from "@/app/action/finance/debtsAction"; // Cek typo path
 
 // Status Badge Component
