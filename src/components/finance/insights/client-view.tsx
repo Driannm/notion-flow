@@ -105,8 +105,8 @@ export default function InsightsClientView({ data }: { data: InsightData }) {
                 Net Cash Flow (This Month)
               </span>
             </div>
-            <h1 className="text-4xl font-extrabold tracking-tight mb-4">
-              {formatCurrency(data.netFlow).replace("Rp", "Rp ")}
+            <h1 className="text-4xl font-extrabold tracking-tight mb-4 font-mono">
+              {formatCurrency(data.netFlow)}
             </h1>
             <div className="text-xs opacity-80 font-medium">
               {data.netFlow >= 0
@@ -127,8 +127,8 @@ export default function InsightsClientView({ data }: { data: InsightData }) {
                 </div>
                 <span className="text-xs font-bold uppercase">Income</span>
               </div>
-              <div className="text-lg font-bold">
-                {formatCurrency(data.income.totalCurrent).replace("Rp", "IDR")}
+              <div className="text-lg font-bold font-mono">
+                {formatCurrency(data.income.totalCurrent)}
               </div>
             </div>
             <PercentBadge percent={data.income.percent} />
@@ -143,8 +143,8 @@ export default function InsightsClientView({ data }: { data: InsightData }) {
                 </div>
                 <span className="text-xs font-bold uppercase">Expense</span>
               </div>
-              <div className="text-lg font-bold">
-                {formatCurrency(data.expense.totalCurrent).replace("Rp", "IDR")}
+              <div className="text-lg font-bold font-mono">
+                {formatCurrency(data.expense.totalCurrent)}
               </div>
             </div>
             <PercentBadge percent={data.expense.percent} inverse />
@@ -168,8 +168,8 @@ export default function InsightsClientView({ data }: { data: InsightData }) {
                       </div>
                       <span className="text-sm font-semibold">{cat.name}</span>
                     </div>
-                    <div className="text-sm font-bold">
-                      {formatCurrency(cat.value).replace("Rp", "IDR")}
+                    <div className="text-sm font-bold font-mono">
+                      {formatCurrency(cat.value)}
                     </div>
                   </div>
                 );
@@ -200,8 +200,8 @@ export default function InsightsClientView({ data }: { data: InsightData }) {
                   </div>
                 </div>
               </div>
-              <div className="text-lg font-bold">
-                {formatCurrency(data.debt.totalRemaining).replace("Rp", "IDR")}
+              <div className="text-lg font-bold font-mono">
+                {formatCurrency(data.debt.totalRemaining)}
               </div>
             </div>
 
@@ -217,8 +217,8 @@ export default function InsightsClientView({ data }: { data: InsightData }) {
                   </div>
                 </div>
               </div>
-              <div className="text-lg font-bold">
-                {formatCurrency(data.loan.totalRemaining).replace("Rp", "IDR")}
+              <div className="text-lg font-bold font-mono">
+                {formatCurrency(data.loan.totalRemaining)}
               </div>
             </div>
           </div>
