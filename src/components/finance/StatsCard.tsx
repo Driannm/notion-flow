@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { Calendar } from "lucide-react";
 
 interface StatItem {
   label: string;
@@ -52,22 +52,28 @@ export default function StatsCard({
       bg: "bg-zinc-900 dark:bg-zinc-100",
       text: "text-white dark:text-zinc-900",
       accent: "text-zinc-400 dark:text-zinc-500",
+      positive: "text-green-400 dark:text-green-600",
       border: "border-white/10 dark:border-black/5",
+      iconBg: "bg-white/10 dark:bg-black/5",
       shadow: "shadow-xl shadow-zinc-300/30 dark:shadow-none",
     },
     income: {
-      bg: "bg-gradient-to-br from-emerald-700 to-emerald-500",
-      text: "text-white",
-      accent: "text-emerald-100",
-      border: "border-white/10",
-      shadow: "shadow-xl shadow-emerald-300/30 dark:shadow-none",
-    },
+      bg: "bg-emerald-900 dark:bg-zinc-100",
+      text: "text-white dark:text-zinc-900",
+      accent: "text-emerald-300 dark:text-emerald-600",
+      positive: "text-emerald-400 dark:text-emerald-600",
+      border: "border-white/10 dark:border-black/5",
+      iconBg: "bg-white/10 dark:bg-black/5",
+      shadow: "shadow-xl shadow-zinc-300/30 dark:shadow-none",
+    },    
     neutral: {
-      bg: "bg-gradient-to-br from-blue-700 to-blue-500",
-      text: "text-white",
-      accent: "text-blue-100",
-      border: "border-white/10",
-      shadow: "shadow-xl shadow-blue-300/30",
+      bg: "bg-zinc-900 dark:bg-zinc-100",
+      text: "text-white dark:text-zinc-900",
+      accent: "text-zinc-400 dark:text-zinc-500",
+      positive: "text-blue-400 dark:text-blue-600",
+      border: "border-white/10 dark:border-black/5",
+      iconBg: "bg-white/10 dark:bg-black/5",
+      shadow: "shadow-xl shadow-zinc-300/30 dark:shadow-none",
     },
   }[theme];
 
@@ -86,52 +92,82 @@ export default function StatsCard({
   };
 
   const content = (
-    <div className={`h-full rounded-[2rem] p-6 flex flex-col justify-between overflow-hidden relative ${themeConfig.bg} ${themeConfig.text} ${themeConfig.shadow} ${className}`}>
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-8 -mt-8 pointer-events-none" />
-
+    <div
+      className={`h-full rounded-[2rem] p-6 flex flex-col justify-between
+      overflow-hidden relative
+      ${themeConfig.bg}
+      ${themeConfig.text}
+      ${themeConfig.shadow}
+      ${className}`}
+    >
+      {/* Decor */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 dark:bg-black/5 rounded-full blur-3xl -mr-8 -mt-8 pointer-events-none" />
+  
       {/* Header */}
       <div className="flex justify-between items-start relative z-10">
         <div>
-          <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${themeConfig.accent}`}>
+          <p
+            className={`text-xs font-bold uppercase tracking-widest mb-1 ${themeConfig.accent}`}
+          >
             {title}
           </p>
+  
           {subtitle && (
             <div className="flex items-center gap-2">
-              <span className={`text-sm font-medium bg-white/10 px-2 py-0.5 rounded-md backdrop-blur-md ${themeConfig.accent}`}>
+              <span
+                className={`text-sm font-medium px-2 py-0.5 rounded-md backdrop-blur-md
+                ${themeConfig.iconBg}`}
+              >
                 {subtitle}
               </span>
             </div>
           )}
         </div>
-        <div className={`bg-white/10 p-2 rounded-full ${themeConfig.accent}`}>
+  
+        <div className={`${themeConfig.iconBg} p-2 rounded-full`}>
           {mainIcon}
         </div>
       </div>
-
+  
       {/* Main Value */}
       <div className="relative z-10">
-        <h1 className="text-4xl font-extrabold tracking-tighter">
+        <h1 className="text-4xl tracking-tighter font-mono font-bold">
           {mainValue}
         </h1>
       </div>
-
+  
       {/* Stats Grid */}
       {stats.length > 0 && (
-        <div className={`grid grid-cols-${Math.min(stats.length, 4)} gap-2 pt-4 border-t ${themeConfig.border} relative z-10`}>
+        <div
+          className={`grid grid-cols-3 gap-2 pt-4 border-t ${themeConfig.border} relative z-10`}
+        >
           {stats.map((stat, index) => (
-            <div key={index} className="text-center">
-              <p className={`text-[10px] uppercase tracking-widest mb-0.5 ${themeConfig.accent}`}>
+            <div
+              key={index}
+              className={`text-center ${
+                index !== 0 ? `border-l ${themeConfig.border}` : ""
+              }`}
+            >
+              <p
+                className={`text-[10px] uppercase tracking-widest mb-0.5 ${themeConfig.accent}`}
+              >
                 {stat.label}
               </p>
-              <p className="text-xs font-bold font-mono">
+  
+              <p
+                className={`text-xs font-bold font-mono ${
+                  stat.color === "positive"
+                    ? themeConfig.positive
+                    : ""
+                }`}
+              >
                 {stat.value}
               </p>
             </div>
           ))}
         </div>
       )}
-
+  
       {/* Pagination Dots */}
       {swipeable && totalPages > 1 && (
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
@@ -140,8 +176,8 @@ export default function StatsCard({
               key={idx}
               className={`w-1.5 h-1.5 rounded-full transition-colors ${
                 currentIndex === idx
-                  ? "bg-white"
-                  : "bg-white/20"
+                  ? "bg-white dark:bg-zinc-900"
+                  : "bg-white/20 dark:bg-zinc-900/20"
               }`}
             />
           ))}
@@ -149,6 +185,8 @@ export default function StatsCard({
       )}
     </div>
   );
+  
+  
 
   if (!swipeable) {
     return <div className="relative h-[200px] w-full">{content}</div>;
