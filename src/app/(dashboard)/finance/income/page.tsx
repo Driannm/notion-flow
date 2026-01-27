@@ -1,20 +1,26 @@
 import * as React from "react";
-import { getIncomes } from "@/app/action/finance/getIncome"; // Sesuaikan path
+import { getIncomes } from "@/app/action/finance/getIncome";
 import IncomeClientView from "@/components/finance/income/client-view";
-import { Loader2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function IncomePage() {
-  const { success, data } = await getIncomes();
+  const response = await getIncomes();
 
-  if (!success || !data) {
-    return (
-        <div className="h-screen w-full flex items-center justify-center bg-zinc-50">
-            <Loader2 className="animate-spin text-zinc-400" />
-        </div>
-    );
+  if (!response?.success || !response.data) {
+    // Return empty state
+    return <IncomeClientView initialData={[]} />;
   }
 
-  return <IncomeClientView data={data} />;
+  const initialData = response.data.map((item: any) => ({
+    id: item.id,
+    title: item.title || "Untitled",
+    source: item.source || "Other",
+    amount: Number(item.amount) || 0,
+    date: item.date,
+    dateObj: item.dateObj,
+    bankAccount: item.bankAccount || undefined,
+  }));
+
+  return <IncomeClientView initialData={initialData} />;
 }

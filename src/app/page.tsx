@@ -115,7 +115,7 @@ export default function MainDashboard() {
         </Link>
 
         {/* GRID APPS */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {/* NOTES */}
           <Link href="/notes" className="col-span-1">
             <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm h-48 flex flex-col justify-between hover:shadow-md transition-all active:scale-95 cursor-pointer relative overflow-hidden">
@@ -187,7 +187,7 @@ export default function MainDashboard() {
               </div>
               <div>
                 <h4 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
-                  {t.comingSoon}
+                  {t.medic}
                 </h4>
                 <p className="text-xs text-zinc-400 mt-1">{t.comingSoon}</p>
               </div>
