@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { DebtItem } from "@/app/action/finance/getDebts";
-import { MoneyInput } from "@/components/MoneyInput";
+import { MoneyInput } from "@/components/finance/MoneyInput";
 import { recordPayment } from "@/app/action/finance/debtsAction";
 
 interface Props {
@@ -226,7 +226,7 @@ export default function DebtsClientView({ debts, loans }: Props) {
           return (
             <div
               key={item.id}
-              onClick={() => router.push(`/finance/debts/${item.id}`)}
+              onClick={() => router.push(`/finance/debts-loans/${item.id}`)}
               className={`p-4 rounded-2xl border bg-card shadow-sm transition-all active:scale-[0.98] cursor-pointer ${
                 isPaidOff
                   ? "border-green-200 dark:bg-green-950/20 bg-green-50/30 opacity-80"
