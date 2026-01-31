@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Lock, MoreVertical, Pin, Trash2, Calendar } from 'lucide-react';
+import { Search, Plus, Lock, MoreVertical, Pin, Trash2, Calendar, ArrowUpRight } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
-// 1. Definisikan Tipe Data (Interface)
+// 1. Tipe Data
 interface NoteItem {
   id: string;
   type: string;
@@ -13,37 +14,33 @@ interface NoteItem {
   date: string;
   image: string | null;
   isPinned: boolean;
-  tasks?: any[]; // Opsional jika nanti ada tasks
-  collaborators?: number;
 }
 
-export default function NotesApp() {
-  // --- STATE MANAGEMENT ---
-  // 2. Tambahkan tipe <NoteItem[]> pada useState agar tidak dianggap 'never'
+// Mock Data (Nanti diganti fetch API)
+const DUMMY_NOTES: NoteItem[] = [
+    { id: '1', type: 'note', title: 'Belanja Bulanan', content: 'Daftar belanjaan untuk bulan ini: Susu, Telur, Roti...', category: 'Personal', date: '2023-10-25', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1000', isPinned: true },
+    { id: '2', type: 'note', title: 'Ide Konten Instagram', content: '1. Tips keuangan, 2. Review buku...', category: 'Work', date: '2023-10-24', image: null, isPinned: false },
+    { id: '3', type: 'locked', title: 'Secret Password', content: '...', category: null, date: '2023-10-20', image: null, isPinned: false },
+    { id: '4', type: 'note', title: 'Resep Kue Coklat', content: 'Tepung terigu 200g, Coklat bubuk 50g...', category: 'Cooking', date: '2023-10-18', image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476d?auto=format&fit=crop&q=80&w=1000', isPinned: false },
+    { id: '5', type: 'note', title: 'Jadwal Meeting', content: 'Senin: Team Lead, Selasa: Client...', category: 'Work', date: '2023-10-15', image: null, isPinned: false },
+];
+
+export default function NotesPage() {
   const [items, setItems] = useState<NoteItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
-  // --- FETCH DATA ---
+  // Simulasi Fetch
   useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        setIsLoading(true);
-        const res = await fetch('/api/notes', { cache: 'no-store' });
-        if (!res.ok) throw new Error("Gagal mengambil data");
-        const data = await res.json();
-        setItems(data);
-      } catch (error) {
-        console.error("Error fetching notes:", error);
-      } finally {
+    // Nanti ganti fetch('/api/notes')
+    setTimeout(() => {
+        setItems(DUMMY_NOTES);
         setIsLoading(false);
-      }
-    };
-    fetchNotes();
+    }, 1000);
   }, []);
 
-  // --- LOGIC ---
+  // Filter Logic
   const filteredItems = items.filter(item => {
     const term = searchTerm.toLowerCase();
     return (
@@ -56,11 +53,10 @@ export default function NotesApp() {
   const pinnedItem = filteredItems.find(item => item.isPinned && item.type !== 'locked');
   const gridItems = filteredItems.filter(item => item.id !== pinnedItem?.id);
 
-  // --- HANDLERS ---
-  // 3. Tambahkan tipe parameter (id: string, e: React.MouseEvent)
+  // Handlers
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm("Hapus note ini? (Hanya simulasi UI)")) {
+    if (window.confirm("Delete note?")) {
       setItems(prev => prev.filter(item => item.id !== id));
       setActiveMenuId(null);
     }
@@ -75,6 +71,7 @@ export default function NotesApp() {
     setActiveMenuId(null);
   };
 
+  // Close menu on click outside
   useEffect(() => {
     const handleClickOutside = () => setActiveMenuId(null);
     document.addEventListener('click', handleClickOutside);
@@ -83,176 +80,179 @@ export default function NotesApp() {
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
-    // 4. Definisikan tipe options date format
-    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }; 
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    return new Date(dateString).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   };
 
-  // --- RENDER ---
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-black"></div>
-        <p className="text-sm text-gray-500 animate-pulse">Syncing with Notion...</p>
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+        <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin"></div>
+            <p className="text-xs font-medium text-zinc-400 tracking-widest uppercase">Loading Notes</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-24">
+    <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans pb-32">
       
-      {/* HEADER */}
-      <div className="bg-white border-b sticky top-0 z-20 shadow-sm/50 backdrop-blur-xl bg-white/80">
-        <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center border-2 border-gray-100 shadow-sm">
-                <span className="text-xl">📝</span>
-              </div>
-              <h1 className="text-2xl font-bold tracking-tight">My Notes</h1>
+      {/* 1. HEADER: Clean & Sticky */}
+      <div className="sticky top-0 z-30 bg-zinc-50/80 backdrop-blur-xl border-b border-zinc-100">
+        <div className="max-w-screen-xl mx-auto px-6 py-4 flex items-center justify-between">
+            <h1 className="text-xl font-bold tracking-tight">Notes.</h1>
+            <div className="w-8 h-8 rounded-full bg-zinc-200 overflow-hidden">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" />
             </div>
-            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <MoreVertical size={24} />
-            </button>
-          </div>
+        </div>
 
-          {/* SEARCH BAR */}
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-black transition-colors" size={20} />
-            <input
-              type="text"
-              placeholder="Search anything..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-12 py-3 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:bg-white transition-all shadow-inner placeholder:text-gray-400"
-            />
-            {searchTerm && (
-               <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500 bg-gray-200 px-2 py-1 rounded-md hover:bg-gray-300 transition-colors">CLEAR</button>
-            )}
-          </div>
+        {/* Search Bar (Floating) */}
+        <div className="px-6 pb-4">
+             <div className="relative max-w-md mx-auto">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
+                <input
+                    type="text"
+                    placeholder="Search your thoughts..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-300 transition-all shadow-sm placeholder:text-zinc-400"
+                />
+             </div>
         </div>
       </div>
 
-      {/* CONTENT GRID */}
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="max-w-screen-xl mx-auto px-6 pt-6">
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-fr">
-
-          {/* 1. HERO CARD (PINNED) */}
-          {pinnedItem && (
-            <div className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4 bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 relative group transition-all hover:shadow-md mb-2">
-              <div className="relative h-48 md:h-50 bg-gray-900">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={pinnedItem.image || 'https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&q=80&w=1000'}
-                  alt={pinnedItem.title}
-                  className="w-full h-full object-cover opacity-80 group-hover:opacity-90 transition-opacity duration-500"
-                />
-                <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md p-1.5 rounded-lg border border-white/30">
-                  <Pin size={14} className="text-white fill-current" />
+        {/* 2. PINNED NOTE (Hero Card Style) */}
+        {pinnedItem && (
+          <div className="mb-8">
+            <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-4 px-1">Pinned Note</h2>
+            <div className="relative group overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-zinc-200/50 border border-zinc-100 aspect-[4/3] sm:aspect-[21/9]">
+                
+                {/* Image Background */}
+                <div className="absolute inset-0">
+                    <img 
+                        src={pinnedItem.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'} 
+                        alt="Pinned" 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 </div>
-                {/* Menu Pinned */}
-                <div className="absolute top-3 right-3" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => setActiveMenuId(activeMenuId === pinnedItem.id ? null : pinnedItem.id)} className="p-2 bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-full text-white transition-colors">
-                        <MoreVertical size={20} />
+
+                {/* Content Overlay */}
+                <div className="absolute bottom-0 left-0 w-full p-6 sm:p-8 text-white">
+                    <div className="flex items-center gap-2 mb-2">
+                         {pinnedItem.category && (
+                            <span className="px-2 py-1 bg-white/20 backdrop-blur-md rounded-lg text-[10px] font-bold uppercase tracking-wider border border-white/10">
+                                {pinnedItem.category}
+                            </span>
+                         )}
+                         <div className="flex items-center gap-1 text-[10px] opacity-70">
+                            <Calendar size={10} /> {formatDate(pinnedItem.date)}
+                         </div>
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-bold leading-tight mb-2">{pinnedItem.title}</h3>
+                    <p className="text-sm text-zinc-300 line-clamp-2 max-w-xl opacity-90">{pinnedItem.content}</p>
+                </div>
+
+                {/* Actions (Top Right) */}
+                <div className="absolute top-4 right-4 flex gap-2">
+                    <button 
+                        onClick={(e) => handleTogglePin(pinnedItem.id, e)}
+                        className="p-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-colors border border-white/10"
+                    >
+                        <Pin size={16} className="fill-white" />
                     </button>
-                    {activeMenuId === pinnedItem.id && (
-                        <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-xl py-1 z-30 border border-gray-100 overflow-hidden text-xs font-medium">
-                            <button onClick={(e) => handleTogglePin(pinnedItem.id, e)} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-                                <Pin size={14} className="rotate-45" /> Unpin Note
-                            </button>
-                        </div>
-                    )}
                 </div>
-              </div>
-              <div className="p-5">
-                <h3 className="font-bold text-lg leading-tight text-gray-900 mb-2">{pinnedItem.title}</h3>
-                <p className="text-sm text-gray-500 mb-4 line-clamp-2">{pinnedItem.content || "No summary available."}</p>
-                <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                  {pinnedItem.category && <span className="text-[10px] uppercase tracking-wider font-bold bg-black text-white px-3 py-1.5 rounded-full">{pinnedItem.category}</span>}
-                  <div className="flex items-center gap-1 text-xs text-gray-400 font-medium"><Calendar size={12} /><span>{formatDate(pinnedItem.date)}</span></div>
-                </div>
-              </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* 2. REGULAR GRID ITEMS */}
-          {gridItems.map((item) => {
-            if (item.type === 'locked') {
-              return (
-                <div key={item.id} className="h-50 bg-gray-100 rounded-3xl p-4 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 group hover:border-gray-300 transition-colors">
-                    <div className="w-12 h-12 bg-gray-200 group-hover:bg-gray-300 text-gray-500 rounded-2xl flex items-center justify-center mb-3 transition-colors">
-                        <Lock size={20} />
-                    </div>
-                    <span className="font-semibold text-sm text-gray-600">Locked</span>
-                    <span className="text-[10px] text-gray-400 mt-1">{formatDate(item.date)}</span>
-                </div>
-              );
-            }
+        {/* 3. MASONRY GRID (Other Notes) */}
+        <div>
+           <div className="flex items-center justify-between mb-4 px-1">
+             <h2 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Recent Notes</h2>
+             <span className="text-xs text-zinc-400">{gridItems.length} items</span>
+           </div>
 
-            return (
-              <div key={item.id} className="group relative flex flex-col justify-between h-50 bg-white rounded-3xl p-4 shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                <div className="overflow-hidden">
-                    <div className="flex justify-between items-start mb-2 gap-2">
-                        <h3 className="font-bold text-sm leading-snug line-clamp-2 text-gray-900 h-10">
-                            {item.title}
-                        </h3>
-                        
-                        <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
-                            <button onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)} className="text-gray-300 hover:text-black hover:bg-gray-100 rounded-full p-1 transition-colors">
-                                <MoreVertical size={16} />
-                            </button>
-                            {activeMenuId === item.id && (
-                                <div className="absolute right-0 top-6 w-32 bg-white rounded-xl shadow-xl py-1 z-30 border border-gray-100 text-xs font-medium animate-in fade-in zoom-in-95 origin-top-right">
-                                    <button onClick={(e) => handleTogglePin(item.id, e)} className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-2 text-gray-700"><Pin size={12} /> Pin Note</button>
-                                    <button onClick={(e) => handleDelete(item.id, e)} className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-2 text-red-500"><Trash2 size={12} /> Delete</button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {item.image ? (
-                        <div className="w-full h-28 bg-gray-100 rounded-xl overflow-hidden mt-1 border border-gray-100">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+           <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+              {gridItems.map((item) => (
+                 <div key={item.id} className="break-inside-avoid">
+                    {item.type === 'locked' ? (
+                        // LOCKED CARD
+                        <div className="h-40 bg-zinc-100 rounded-3xl p-6 flex flex-col items-center justify-center text-zinc-400 border border-zinc-200">
+                             <Lock size={24} className="mb-2 opacity-50" />
+                             <span className="text-xs font-medium">Locked Note</span>
                         </div>
                     ) : (
-                         <p className="text-xs text-gray-500 line-clamp-6 leading-relaxed mt-1">
-                            {item.content || "No additional text content."}
-                        </p>
-                    )}
-                </div>
+                        // STANDARD CARD
+                        <div 
+                            className="group relative bg-white rounded-3xl p-5 border border-zinc-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden"
+                            onClick={() => console.log('Open detail', item.id)}
+                        >
+                            {/* Menu Trigger */}
+                            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={e => e.stopPropagation()}>
+                                <button 
+                                    onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
+                                    className="p-1.5 bg-white/80 hover:bg-zinc-100 backdrop-blur rounded-full text-zinc-500 shadow-sm border border-zinc-100"
+                                >
+                                    <MoreVertical size={14} />
+                                </button>
+                                {activeMenuId === item.id && (
+                                    <div className="absolute right-0 mt-2 w-32 bg-white rounded-xl shadow-xl border border-zinc-100 py-1 text-xs font-medium z-20 animate-in fade-in zoom-in-95">
+                                        <button onClick={(e) => handleTogglePin(item.id, e)} className="w-full text-left px-3 py-2 hover:bg-zinc-50 flex items-center gap-2"><Pin size={12} /> Pin Note</button>
+                                        <button onClick={(e) => handleDelete(item.id, e)} className="w-full text-left px-3 py-2 hover:bg-red-50 text-red-500 flex items-center gap-2"><Trash2 size={12} /> Delete</button>
+                                    </div>
+                                )}
+                            </div>
 
-                <div className="mt-3 flex justify-between items-end border-t border-gray-50 pt-3">
-                    {item.category ? (
-                        <span className="text-[10px] px-2 py-1 bg-gray-50 border border-gray-100 text-gray-600 rounded-md font-medium truncate max-w-[50%]">
-                            {item.category}
-                        </span>
-                    ) : <span></span>}
-                    <span className="text-[10px] text-gray-400 font-medium">{formatDate(item.date)}</span>
-                </div>
-              </div>
-            );
-          })}
+                            {/* Image Preview (If any) */}
+                            {item.image && (
+                                <div className="mb-3 -mx-5 -mt-5 h-32 overflow-hidden">
+                                    <img src={item.image} alt="" className="w-full h-full object-cover" />
+                                </div>
+                            )}
+
+                            {/* Content */}
+                            <div>
+                                <h3 className="font-bold text-zinc-900 leading-snug mb-1.5">{item.title}</h3>
+                                <p className="text-xs text-zinc-500 line-clamp-4 leading-relaxed">
+                                    {item.content || "No text content."}
+                                </p>
+                            </div>
+
+                            {/* Footer */}
+                            <div className="mt-4 flex items-center justify-between pt-3 border-t border-zinc-50">
+                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${
+                                    !item.category ? 'bg-zinc-50 text-zinc-400' : 'bg-zinc-900 text-white'
+                                }`}>
+                                    {item.category || 'Uncategorized'}
+                                </span>
+                                <span className="text-[10px] text-zinc-400 font-medium">{formatDate(item.date)}</span>
+                            </div>
+                        </div>
+                    )}
+                 </div>
+              ))}
+           </div>
         </div>
-        
+
+        {/* Empty State */}
         {gridItems.length === 0 && !pinnedItem && !isLoading && (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <Search size={24} className="text-gray-400" />
-                </div>
-                <h3 className="text-gray-900 font-medium mb-1">No notes found</h3>
-                <p className="text-gray-400 text-xs max-w-[200px]">Coba cari kata kunci lain atau tambahkan catatan di Notion.</p>
+            <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
+                <Search className="w-12 h-12 text-zinc-300 mb-4" />
+                <p className="text-sm font-medium">No notes found.</p>
             </div>
         )}
+
       </div>
 
-      <button 
-        onClick={() => window.open(`https://notion.so/${process.env.NEXT_PUBLIC_NOTION_DATABASE_ID || ''}`, '_blank')}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-black text-white rounded-full flex items-center justify-center shadow-lg shadow-black/30 hover:scale-110 hover:shadow-xl transition-all duration-300 z-40 active:scale-95 group"
-      >
-        <Plus size={28} className="group-hover:rotate-90 transition-transform duration-300" />
-      </button>
+      {/* FAB: Floating Action Button */}
+      <div className="fixed bottom-8 right-8 z-40">
+        <button className="group w-14 h-14 bg-zinc-900 text-white rounded-[1.2rem] shadow-xl shadow-zinc-400/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300">
+            <Plus className="w-6 h-6 transition-transform group-hover:rotate-90" />
+        </button>
+      </div>
 
     </div>
   );
