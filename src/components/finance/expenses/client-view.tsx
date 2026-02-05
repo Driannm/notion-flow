@@ -5,10 +5,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import {
-  Calendar,
-  ChevronLeft,
-} from "lucide-react";
+import { Calendar, ChevronLeft } from "lucide-react";
 import { useFinanceFilter } from "@/hooks/UseFilter";
 
 // Client Components yang kita PAKAI:
@@ -18,6 +15,7 @@ import StatsCard from "@/components/finance/StatsCard";
 import { SwipeableItem } from "@/components/finance/SwipeableItem";
 import DeleteAlertDialog from "@/components/finance/AlertDelete";
 import SearchFilterBar from "@/components/finance/SearchFilter";
+import { Badge } from "@/components/ui/badge";
 
 // Logic & Data
 import { deleteExpense } from "@/app/action/finance/getExpenses";
@@ -326,8 +324,7 @@ export default function ExpensesClientView({ initialData }: Props) {
                                 {formatCurrency(item.amount)}
                               </span>
                             </div>
-
-                            <p className="text-xs text-zinc-400 truncate">
+                            <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300 truncate">
                               {item.paymentMethod}
                             </p>
                           </div>
@@ -375,7 +372,7 @@ export default function ExpensesClientView({ initialData }: Props) {
         onClick={() => router.push("/finance/expenses/add")}
         icon="plus"
         variant="primary"
-        position="bottom-center"
+        position="bottom-right"
         label="Add Expense"
         showLabel={false}
       />
