@@ -18,6 +18,7 @@ import {
   BellDot,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getFinancialInsights } from "@/app/action/finance/getInsights";
 import Link from "next/link";
 import { BorderBeam } from "@/components/ui/border-beam";
@@ -430,16 +431,16 @@ export default function DashboardPage() {
 
   const totalPages = Math.ceil(summaryCards.length / 2);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center bg-gray-50 items-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading financial data...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen flex justify-center bg-gray-50 items-center">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+  //         <p className="mt-4 text-gray-600">Loading financial data...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen flex justify-center bg-gray-50 dark:bg-gray-950">
@@ -474,18 +475,26 @@ export default function DashboardPage() {
                 <p className="text-white/80 text-sm font-medium tracking-wide">
                   Current Balance
                 </p>
-                <h1 className="text-white text-5xl font-bold tracking-tight">
-                  {formatCurrency(currentBalance)}
-                </h1>
+                <h2 className="text-white text-5xl font-bold tracking-tight font-mono">
+                  {loading ? (
+                    <Skeleton className="h-12 w-48 mx-auto bg-white/30" />
+                  ) : (
+                    formatCurrency(currentBalance)
+                  )}
+                </h2>
                 <div className="flex justify-center">
-                  <div
-                    className={`bg-white/20 backdrop-blur-sm border-0 px-4 py-1.5 font-medium text-xs rounded-full ${
-                      netFlowData >= 0 ? "text-green-200" : "text-red-200"
-                    }`}
-                  >
-                    {netFlowData >= 0 ? "+" : ""}
-                    {formatCurrency(netFlowData)} this month
-                  </div>
+                  {loading ? (
+                    <Skeleton className="h-6 w-40 rounded-full bg-white/30" />
+                  ) : (
+                    <div
+                      className={`bg-white/20 backdrop-blur-sm px-4 py-1.5 font-medium text-xs rounded-full font-mono ${
+                        netFlowData >= 0 ? "text-green-200" : "text-red-200"
+                      }`}
+                    >
+                      {netFlowData >= 0 ? "+" : ""}
+                      {formatCurrency(netFlowData)} this month
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -517,10 +526,6 @@ export default function DashboardPage() {
                     </h2>
                     <Info className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                   </div>
-                  <button className="text-sm font-medium text-gray-600 dark:text-gray-300 h-8 px-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1">
-                    <span>Details</span>
-                    <ChevronDown className="w-3 h-3 rotate-[-90deg]" />
-                  </button>
                 </div>
 
                 <div className="relative">
@@ -549,8 +554,12 @@ export default function DashboardPage() {
                                 <Info className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                               </p>
 
-                              <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight break-words whitespace-normal">
-                                {card.amount}
+                              <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight break-words whitespace-normal flex justify-center font-mono">
+                                {loading ? (
+                                  <Skeleton className="h-6 w-20" />
+                                ) : (
+                                  card.amount
+                                )}
                               </p>
                             </div>
                           </div>
@@ -676,28 +685,31 @@ export default function DashboardPage() {
               </div>
 
               {/* Insight Banner */}
-              <div className="relative overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 rounded-2xl p-5 shadow-xl">
-                <div className="flex items-center justify-between relative z-10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
-                      <BellDot className="w-5 h-5 text-white" />
+              <div className="relative overflow-hidden rounded-2xl">
+                {/* CONTENT CARD */}
+                <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 p-5 rounded-2xl shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+                        <BellDot className="w-5 h-5 text-white" />
+                      </div>
+                      <p className="text-white font-medium text-sm">
+                        Your insights are ready
+                      </p>
                     </div>
-                    <p className="text-white font-medium text-sm">
-                      Your insights are ready
-                    </p>
+                    <button className="bg-white/20 hover:bg-white/30 text-white h-8 px-4 rounded-full text-xs font-semibold backdrop-blur-sm transition-all">
+                      Check Now
+                    </button>
                   </div>
-                  <button className="bg-white/20 hover:bg-white/30 text-white h-8 px-4 rounded-full text-xs font-semibold backdrop-blur-sm transition-all">
-                    Check Now
-                  </button>
                 </div>
 
-                {/* Animated Border Effects */}
+                {/* BORDER BEAM (langsung di parent, bukan di dalam card content) */}
                 <BorderBeam
-                  duration={12}
-                  size={300}
-                  borderWidth={3}
-                  initialOffset={2}
-                  className="from-transparent via-yellow-500 to-transparent"
+                  size={120}
+                  duration={10}
+                  borderWidth={1}
+                  colorFrom="#a855f7"
+                  colorTo="#6366f1"
                 />
               </div>
 
@@ -745,7 +757,7 @@ export default function DashboardPage() {
 
                         <div className="text-right flex-shrink-0">
                           <p
-                            className={`font-bold text-sm ${transaction.amountColor}`}
+                            className={`font-bold text-sm font-mono ${transaction.amountColor}`}
                           >
                             {transaction.amount}
                           </p>
@@ -781,48 +793,93 @@ export default function DashboardPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="center"
-                            sideOffset={12}
-                            className="w-40 rounded-lg p-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl"
+                            sideOffset={14}
+                            className="w-56 rounded-2xl p-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200/60 dark:border-gray-800 shadow-2xl"
                           >
-                            <div className="px-2 py-1.5">
-                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                Add New Transaction
-                              </span>
+                            <div className="px-3 pt-2 pb-1">
+                              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                Quick Add
+                              </p>
                             </div>
-                            <DropdownMenuSeparator className="bg-gray-100 dark:bg-gray-800" />
+                            <DropdownMenuSeparator className="bg-gray-100 dark:bg-gray-800 my-1" />
 
                             <Link href="/finance/expenses/add">
-                              <DropdownMenuItem className="gap-2 cursor-pointer py-2 px-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 text-sm">
-                                <TrendingDown className="w-4 h-4 text-red-500" />
-                                <span>Add Expense</span>
+                              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                <div className="w-9 h-9 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                  <TrendingDown className="w-4 h-4 text-red-500" />
+                                </div>
+                                <div className="flex flex-col leading-tight">
+                                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                    Add Expense
+                                  </span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    Track spending
+                                  </span>
+                                </div>
                               </DropdownMenuItem>
                             </Link>
 
                             <Link href="/finance/income/add">
-                              <DropdownMenuItem className="gap-2 cursor-pointer py-2 px-2 rounded-md hover:bg-green-50 dark:hover:bg-green-900/20 text-sm">
-                                <TrendingUp className="w-4 h-4 text-green-500" />
-                                <span>Add Income</span>
+                              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
+                                <div className="w-9 h-9 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                  <TrendingUp className="w-4 h-4 text-green-500" />
+                                </div>
+                                <div className="flex flex-col leading-tight">
+                                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                    Add Income
+                                  </span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    Salary or earnings
+                                  </span>
+                                </div>
                               </DropdownMenuItem>
                             </Link>
 
                             <Link href="/finance/transfer/add">
-                              <DropdownMenuItem className="gap-2 cursor-pointer py-2 px-2 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm">
-                                <ArrowLeftRight className="w-4 h-4 text-blue-500" />
-                                <span>Add Transfer</span>
+                              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                                <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                  <ArrowLeftRight className="w-4 h-4 text-blue-500" />
+                                </div>
+                                <div className="flex flex-col leading-tight">
+                                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                    Add Transfer
+                                  </span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    Move between accounts
+                                  </span>
+                                </div>
                               </DropdownMenuItem>
                             </Link>
 
                             <Link href="/finance/debts-loans/add?type=debt">
-                              <DropdownMenuItem className="gap-2 cursor-pointer py-2 px-2 rounded-md hover:bg-amber-50 dark:hover:bg-amber-900/20 text-sm">
-                                <WalletCards className="w-4 h-4 text-amber-500" />
-                                <span>Add Debt</span>
+                              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">
+                                <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                                  <WalletCards className="w-4 h-4 text-amber-500" />
+                                </div>
+                                <div className="flex flex-col leading-tight">
+                                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                    Add Debt
+                                  </span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    Money you owe
+                                  </span>
+                                </div>
                               </DropdownMenuItem>
                             </Link>
 
                             <Link href="/finance/debts-loans/add?type=loan">
-                              <DropdownMenuItem className="gap-2 cursor-pointer py-2 px-2 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm">
-                                <CreditCard className="w-4 h-4 text-blue-600" />
-                                <span>Add Loan</span>
+                              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
+                                <div className="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                                  <CreditCard className="w-4 h-4 text-indigo-500" />
+                                </div>
+                                <div className="flex flex-col leading-tight">
+                                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                    Add Loan
+                                  </span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    Money lent out
+                                  </span>
+                                </div>
                               </DropdownMenuItem>
                             </Link>
                           </DropdownMenuContent>
