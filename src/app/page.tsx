@@ -115,10 +115,10 @@ export default function MainDashboard() {
         </Link>
 
         {/* GRID APPS */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {/* NOTES */}
           <Link href="/notes" className="col-span-1">
-            <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm h-48 flex flex-col justify-between hover:shadow-md transition-all active:scale-95 cursor-pointer relative overflow-hidden">
+            <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm h-36 sm:h-44 p-4 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all active:scale-95 cursor-pointer relative overflow-hidden">
               <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity dark:opacity-10 dark:text-white">
                 <StickyNote className="w-24 h-24" />
               </div>
@@ -139,7 +139,7 @@ export default function MainDashboard() {
 
           {/* WORK */}
           <button className="col-span-1 text-left">
-            <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm h-48 flex flex-col justify-between hover:shadow-md transition-all active:scale-95 cursor-pointer relative overflow-hidden">
+            <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm h-36 sm:h-44 p-4 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all active:scale-95 cursor-pointer relative overflow-hidden">
               <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity dark:opacity-10 dark:text-white">
                 <Laptop2Icon className="w-24 h-24" />
               </div>
@@ -158,7 +158,7 @@ export default function MainDashboard() {
 
           {/* Trip Planner */}
           <button className="col-span-1 text-left">
-            <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm h-48 flex flex-col justify-between hover:shadow-md transition-all active:scale-95 cursor-pointer relative overflow-hidden">
+            <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm h-36 sm:h-44 p-4 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all active:scale-95 cursor-pointer relative overflow-hidden">
               <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity dark:opacity-10 dark:text-white">
                 <MapPinCheckIcon className="w-24 h-24" />
               </div>
@@ -177,7 +177,7 @@ export default function MainDashboard() {
           
           {/* Trip Planner */}
           <button className="col-span-1 text-left">
-            <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm h-48 flex flex-col justify-between hover:shadow-md transition-all active:scale-95 cursor-pointer relative overflow-hidden">
+            <div className="group bg-white dark:bg-zinc-900 p-5 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm h-36 sm:h-44 p-4 sm:p-5 flex flex-col justify-between hover:shadow-md transition-all active:scale-95 cursor-pointer relative overflow-hidden">
               <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity dark:opacity-10 dark:text-white">
                 <CheckCircle className="w-24 h-24" />
               </div>
