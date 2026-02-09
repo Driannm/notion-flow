@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getFinancialInsights } from "@/app/action/finance/getInsights";
 import Link from "next/link";
 import { BorderBeam } from "@/components/ui/border-beam";
+import { useLanguage } from "@/components/LanguageProvider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,13 +73,14 @@ const DonutChart = ({
   colors: string[];
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const { t } = useLanguage();
 
   if (!data || data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <div className="w-48 h-48 rounded-full border-8 border-gray-200 dark:border-gray-700 flex items-center justify-center">
           <span className="text-gray-400 dark:text-gray-500 text-sm">
-            No data
+            {t.noDataAvailable}
           </span>
         </div>
         <p className="mt-4 text-gray-600 dark:text-gray-400">{title}</p>
@@ -170,7 +172,7 @@ const DonutChart = ({
             {formatCurrency(total)}
           </span>
           <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-            {segments.length} categories
+            {segments.length} {t.categories}
           </span>
         </div>
       </div>
@@ -216,6 +218,7 @@ export default function DashboardPage() {
   const [activeChart, setActiveChart] = useState<"expense" | "income">(
     "expense"
   );
+  const { language, setLanguage, t } = useLanguage();
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
@@ -310,10 +313,10 @@ export default function DashboardPage() {
   const transactions = [
     {
       id: 1,
-      merchant: expenseData.topCategories[0]?.name || "Food & Dining",
+      merchant: expenseData.topCategories[0]?.name || t.foodDining,
       icon: "🍽️",
       iconBg: "bg-purple-100",
-      tags: ["Daily"],
+      tags: [t.daily],
       amount: `-${formatCurrency(
         expenseData.topCategories[0]?.value || 354.25
       )}`,
@@ -322,39 +325,39 @@ export default function DashboardPage() {
     },
     {
       id: 2,
-      merchant: "Salary Deposit",
+      merchant: t.salaryDeposit,
       icon: "💰",
       iconBg: "bg-green-100",
-      tags: ["Income"],
+      tags: [t.incomeTag],
       amount: `+${formatCurrency(incomeData.totalCurrent || 4875)}`,
       amountColor: "text-green-500",
-      secondary: "Monthly",
+      secondary: t.monthly,
     },
   ];
 
   const navItems = [
     {
       icon: TrendingUp,
-      label: "Income",
+      label: t.navIncome,
       active: false,
       href: "/finance/income",
     },
     {
       icon: DollarSign,
-      label: "Loan",
+      label: t.navLoan,
       active: false,
       href: "/finance/debts-loans?type=loan",
     },
     { icon: null, label: "", active: false },
     {
       icon: CreditCard,
-      label: "Debt",
+      label: t.navDebt,
       active: false,
       href: "/finance/debts-loans?type=debt",
     },
     {
       icon: TrendingDown,
-      label: "Expense",
+      label: t.navExpense,
       active: false,
       href: "/finance/expenses",
     },
@@ -363,42 +366,42 @@ export default function DashboardPage() {
   const summaryCards = [
     {
       id: 1,
-      title: "Income",
+      title: t.income,
       icon: TrendingUp,
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
       amount: formatCurrency(incomeData.totalCurrent),
-      info: "Monthly income",
+      info: t.monthlyIncome,
       change: incomeData.percent,
     },
     {
       id: 2,
-      title: "Expenses",
+      title: t.expenses,
       icon: TrendingDown,
       iconBg: "bg-red-100",
       iconColor: "text-red-600",
       amount: formatCurrency(expenseData.totalCurrent),
-      info: "Monthly expenses",
+      info: t.monthlyExpenses,
       change: expenseData.percent,
     },
     {
       id: 3,
-      title: "Loan",
+      title: t.loan,
       icon: DollarSign,
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
       amount: formatCurrency(loanData.totalRemaining),
-      info: "Active loans",
+      info: t.activeLoans,
       count: loanData.count,
     },
     {
       id: 4,
-      title: "Debt",
+      title: t.debt,
       icon: CreditCard,
       iconBg: "bg-orange-100",
       iconColor: "text-orange-600",
       amount: formatCurrency(debtData.totalRemaining),
-      info: "Total debt",
+      info: t.totalDebt,
       count: debtData.count,
     },
   ];
@@ -431,17 +434,6 @@ export default function DashboardPage() {
 
   const totalPages = Math.ceil(summaryCards.length / 2);
 
-  // if (loading) {
-  //   return (
-  //     <div className="min-h-screen flex justify-center bg-gray-50 items-center">
-  //       <div className="text-center">
-  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-  //         <p className="mt-4 text-gray-600">Loading financial data...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
   return (
     <div className="min-h-screen flex justify-center bg-gray-50 dark:bg-gray-950">
       <div className="w-full max-w-md bg-gray-50 dark:bg-gray-900 min-h-screen relative shadow-2xl dark:shadow-none overflow-hidden flex flex-col">
@@ -460,7 +452,7 @@ export default function DashboardPage() {
                 </div>
 
                 <button className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm font-medium hover:bg-white/30 transition-all">
-                  <span>November 2025</span>
+                  <span>{t.month.thisMonth}</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
 
@@ -473,18 +465,18 @@ export default function DashboardPage() {
               {/* Balance Content */}
               <div className="text-center space-y-3 px-6">
                 <p className="text-white/80 text-sm font-medium tracking-wide">
-                  Current Balance
+                  {t.currentBalance}
                 </p>
                 <h2 className="text-white text-5xl font-bold tracking-tight font-mono">
                   {loading ? (
-                    <Skeleton className="h-12 w-48 mx-auto bg-white/30" />
+                    <Skeleton className="h-12 w-55 mx-auto rounded-full bg-white/30" />
                   ) : (
                     formatCurrency(currentBalance)
                   )}
                 </h2>
                 <div className="flex justify-center">
                   {loading ? (
-                    <Skeleton className="h-6 w-40 rounded-full bg-white/30" />
+                    <Skeleton className="h-6 w-49 mx-auto rounded-full bg-white/30" />
                   ) : (
                     <div
                       className={`bg-white/20 backdrop-blur-sm px-4 py-1.5 font-medium text-xs rounded-full font-mono ${
@@ -492,27 +484,10 @@ export default function DashboardPage() {
                       }`}
                     >
                       {netFlowData >= 0 ? "+" : ""}
-                      {formatCurrency(netFlowData)} this month
+                      {formatCurrency(netFlowData)} {t.thisMonthLabel}
                     </div>
                   )}
                 </div>
-              </div>
-
-              {/* Wave */}
-              <div className="absolute bottom-0 left-0 right-0 h-24">
-                <svg
-                  viewBox="0 0 390 96"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-full h-full"
-                  preserveAspectRatio="none"
-                >
-                  <path
-                    d="M 0,48 Q 97.5,0 195,48 T 390,48 L 390,96 L 0,96 Z"
-                    fill="white"
-                    className="dark:fill-gray-900"
-                  />
-                </svg>
               </div>
             </div>
 
@@ -522,7 +497,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                      Your Money
+                      {t.yourMoney}
                     </h2>
                   </div>
                 </div>
@@ -554,7 +529,7 @@ export default function DashboardPage() {
 
                               <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight break-words whitespace-normal flex justify-center font-mono">
                                 {loading ? (
-                                  <Skeleton className="h-6 w-20" />
+                                  <Skeleton className="h-6 w-50 mx-auto rounded-full bg-white/30" />
                                 ) : (
                                   card.amount
                                 )}
@@ -587,8 +562,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                      {activeChart === "expense" ? "Expenses" : "Income"}{" "}
-                      Breakdown
+                      {activeChart === "expense" ? t.expenseBreakdown : t.incomeBreakdown}
                     </h2>
                     <Info className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                   </div>
@@ -612,7 +586,7 @@ export default function DashboardPage() {
                       }`}
                     >
                       <ChevronLeft className="w-4 h-4" />
-                      Expenses
+                      {t.expense}
                     </button>
 
                     <button
@@ -623,7 +597,7 @@ export default function DashboardPage() {
                           : "text-gray-400 dark:text-gray-500"
                       }`}
                     >
-                      Income
+                      {t.income}
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -642,7 +616,7 @@ export default function DashboardPage() {
                       <div className="min-w-full">
                         <DonutChart
                           data={expenseData.topCategories || []}
-                          title="Total Expenses"
+                          title={t.totalExpenses}
                           total={expenseData.totalCurrent}
                           isExpense={true}
                           colors={expenseColors}
@@ -653,7 +627,7 @@ export default function DashboardPage() {
                       <div className="min-w-full">
                         <DonutChart
                           data={incomeData.topCategories || []}
-                          title="Total Income"
+                          title={t.totalIncome}
                           total={incomeData.totalCurrent}
                           isExpense={false}
                           colors={incomeColors}
@@ -692,11 +666,11 @@ export default function DashboardPage() {
                         <BellDot className="w-5 h-5 text-white" />
                       </div>
                       <p className="text-white font-medium text-sm">
-                        Your insights are ready
+                        {t.insightReady}
                       </p>
                     </div>
                     <button className="bg-white/20 hover:bg-white/30 text-white h-8 px-4 rounded-full text-xs font-semibold backdrop-blur-sm transition-all">
-                      Check Now
+                      {t.checkNow}
                     </button>
                   </div>
                 </div>
@@ -716,58 +690,66 @@ export default function DashboardPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                      Recent Transactions
+                      {t.recentTransactionsTitle}
                     </h2>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Monday, 12 January, 2026
+                      {t.todayFullDate}
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  {transactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-shadow"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`w-12 h-12 ${transaction.iconBg} rounded-xl flex items-center justify-center text-xl flex-shrink-0`}
-                        >
-                          {transaction.icon}
-                        </div>
+                  {transactions.length > 0 ? (
+                    transactions.map((transaction) => (
+                      <div
+                        key={transaction.id}
+                        className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-shadow"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`w-12 h-12 ${transaction.iconBg} rounded-xl flex items-center justify-center text-xl flex-shrink-0`}
+                          >
+                            {transaction.icon}
+                          </div>
 
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-gray-900 dark:text-white text-sm mb-1.5">
-                            {transaction.merchant}
-                          </h3>
-                          <div className="flex flex-wrap gap-1.5">
-                            {transaction.tags.map((tag, index) => (
-                              <span
-                                key={index}
-                                className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs px-2.5 py-0.5 font-medium border-0 rounded-full"
-                              >
-                                {tag}
-                              </span>
-                            ))}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-gray-900 dark:text-white text-sm mb-1.5">
+                              {transaction.merchant}
+                            </h3>
+                            <div className="flex flex-wrap gap-1.5">
+                              {transaction.tags.map((tag, index) => (
+                                <span
+                                  key={index}
+                                  className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs px-2.5 py-0.5 font-medium border-0 rounded-full"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="text-right flex-shrink-0">
+                            <p
+                              className={`font-bold text-sm font-mono ${transaction.amountColor}`}
+                            >
+                              {transaction.amount}
+                            </p>
+                            {transaction.secondary && (
+                              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                {transaction.secondary}
+                              </p>
+                            )}
                           </div>
                         </div>
-
-                        <div className="text-right flex-shrink-0">
-                          <p
-                            className={`font-bold text-sm font-mono ${transaction.amountColor}`}
-                          >
-                            {transaction.amount}
-                          </p>
-                          {transaction.secondary && (
-                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                              {transaction.secondary}
-                            </p>
-                          )}
-                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-400 dark:text-gray-500">
+                        {t.noTransactionData}
+                      </p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -792,11 +774,11 @@ export default function DashboardPage() {
                           <DropdownMenuContent
                             align="center"
                             sideOffset={14}
-                            className="w-56 rounded-2xl p-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200/60 dark:border-gray-800 shadow-2xl"
+                            className="w-69 rounded-2xl p-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200/60 dark:border-gray-800 shadow-2xl"
                           >
                             <div className="px-3 pt-2 pb-1">
                               <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                Quick Add
+                                {t.quickAdd}
                               </p>
                             </div>
                             <DropdownMenuSeparator className="bg-gray-100 dark:bg-gray-800 my-1" />
@@ -808,10 +790,10 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="flex flex-col leading-tight">
                                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                    Add Expense
+                                    {t.addExpense}
                                   </span>
                                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    Track spending
+                                    {t.trackSpending}
                                   </span>
                                 </div>
                               </DropdownMenuItem>
@@ -824,10 +806,10 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="flex flex-col leading-tight">
                                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                    Add Income
+                                    {t.addIncome}
                                   </span>
                                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    Salary or earnings
+                                    {t.salaryOrEarnings}
                                   </span>
                                 </div>
                               </DropdownMenuItem>
@@ -840,10 +822,10 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="flex flex-col leading-tight">
                                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                    Add Transfer
+                                    {t.addTransfer}
                                   </span>
                                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    Move between accounts
+                                    {t.moveBetweenAccounts}
                                   </span>
                                 </div>
                               </DropdownMenuItem>
@@ -856,10 +838,10 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="flex flex-col leading-tight">
                                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                    Add Debt
+                                    {t.addDebt}
                                   </span>
                                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    Money you owe
+                                    {t.moneyYouOwe}
                                   </span>
                                 </div>
                               </DropdownMenuItem>
@@ -872,10 +854,10 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="flex flex-col leading-tight">
                                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                    Add Loan
+                                    {t.addLoan}
                                   </span>
                                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    Money lent out
+                                    {t.moneyLentOut}
                                   </span>
                                 </div>
                               </DropdownMenuItem>

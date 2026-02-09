@@ -1,7 +1,9 @@
+// dictionary.ts
 export type Language = "id" | "en";
 
 export const dictionary = {
   id: {
+    // Main Page
     greeting: "Halo, Sayang 👋",
     balance: "Saldo Saat Ini",
     finance: "Keuangan",
@@ -21,7 +23,6 @@ export const dictionary = {
     logout: "Keluar",
     lastTx: "Gaji Bulanan",
     incomeTitle: "Pemasukan",
-    totalIncome: "Total Pemasukan",
     sourcesBreakdown: "Sumber Pemasukan",
     recentTransactions: "Riwayat Transaksi",
     viewReport: "Lihat Laporan",
@@ -29,11 +30,80 @@ export const dictionary = {
     addIncome: "Tambah Pemasukan",
     contribution: "kontribusi",
     noData: "Belum ada data pemasukan.",
+
+    // ===== Finance Dashboard Page =====
+    expenses: "Pengeluaran",
+    expense: "Pengeluaran",
+    income: "Pemasukan",
+    loan: "Pinjaman",
+    debt: "Hutang",
+    
+    // Balance Section
+    currentBalance: "Saldo Saat Ini",
+    
+    // Summary Cards
+    monthlyIncome: "Pemasukan bulanan",
+    monthlyExpenses: "Pengeluaran bulanan",
+    activeLoans: "Pinjaman aktif",
+    totalDebt: "Total hutang",
+
+    // Chart Titles
+    expenseBreakdown: "Rincian Pengeluaran",
+    incomeBreakdown: "Rincian Pemasukan",
+    
+    // Chart Center Text
+    totalExpenses: "Total Pengeluaran",
+    totalIncome: "Total Pemasukan",
+    
+    categories: "kategori",
+    thisMonthLabel: "bulan ini",
+
+    // Insight Banner
+    insightReady: "Insight keuanganmu sudah siap",
+    checkNow: "Lihat Sekarang",
+
+    // Transactions Section
+    recentTransactionsTitle: "Transaksi Terbaru",
+    todayFullDate: "Hari ini",
+
+    // Quick Add Menu
+    quickAdd: "Tambah Cepat",
+    addExpense: "Tambah Pengeluaran",
+    trackSpending: "Catat pengeluaran",
+    salaryOrEarnings: "Gaji atau pendapatan",
+    addTransfer: "Tambah Transfer",
+    moveBetweenAccounts: "Pindah antar akun",
+    addDebt: "Tambah Hutang",
+    moneyYouOwe: "Uang yang kamu pinjam",
+    addLoan: "Tambah Pinjaman",
+    moneyLentOut: "Uang yang kamu pinjamkan",
+
+    // Transaction Tags
+    foodDining: "Makan & Minum",
+    salaryDeposit: "Gaji Masuk",
+    daily: "Harian",
+    incomeTag: "Pemasukan",
+    monthly: "Bulanan",
+
+    // Navigation
+    navIncome: "Pemasukan",
+    navExpense: "Pengeluaran",
+    navLoan: "Pinjaman",
+    navDebt: "Hutang",
+
+    // No Data States
+    noDataAvailable: "Tidak ada data",
+    noTransactionData: "Tidak ada data transaksi",
+
+    // Date Format
+    currentMonthYear: "Bulan ini",
+
     month: {
-        thisMonth: "Bulan Ini"
-    }
+      thisMonth: "Bulan Ini",
+    },
   },
   en: {
+    // Main Page
     greeting: "Hello, Honey 👋",
     balance: "Current Balance",
     finance: "Finance",
@@ -53,7 +123,6 @@ export const dictionary = {
     logout: "Log Out",
     lastTx: "Monthly Salary",
     incomeTitle: "Income",
-    totalIncome: "Total Income",
     sourcesBreakdown: "Sources Breakdown",
     recentTransactions: "Recent Transactions",
     viewReport: "View Report",
@@ -61,8 +130,76 @@ export const dictionary = {
     addIncome: "Add Income",
     contribution: "contribution",
     noData: "No income data found.",
+
+    // ===== Finance Dashboard Page =====
+    expenses: "Expenses",
+    expense: "Expense",
+    income: "Income",
+    loan: "Loan",
+    debt: "Debt",
+    
+    // Balance Section
+    currentBalance: "Current Balance",
+    
+    // Summary Cards
+    monthlyIncome: "Monthly income",
+    monthlyExpenses: "Monthly expenses",
+    activeLoans: "Active loans",
+    totalDebt: "Total debt",
+
+    // Chart Titles
+    expenseBreakdown: "Expense Breakdown",
+    incomeBreakdown: "Income Breakdown",
+    
+    // Chart Center Text
+    totalExpenses: "Total Expenses",
+    totalIncome: "Total Income",
+    
+    categories: "categories",
+    thisMonthLabel: "this month",
+
+    // Insight Banner
+    insightReady: "Your financial insights are ready",
+    checkNow: "Check Now",
+
+    // Transactions Section
+    recentTransactionsTitle: "Recent Transactions",
+    todayFullDate: "Today",
+
+    // Quick Add Menu
+    quickAdd: "Quick Add",
+    addExpense: "Add Expense",
+    trackSpending: "Track spending",
+    salaryOrEarnings: "Salary or earnings",
+    addTransfer: "Add Transfer",
+    moveBetweenAccounts: "Move between accounts",
+    addDebt: "Add Debt",
+    moneyYouOwe: "Money you owe",
+    addLoan: "Add Loan",
+    moneyLentOut: "Money lent out",
+
+    // Transaction Tags
+    foodDining: "Food & Dining",
+    salaryDeposit: "Salary Deposit",
+    daily: "Daily",
+    incomeTag: "Income",
+    monthly: "Monthly",
+
+    // Navigation
+    navIncome: "Income",
+    navExpense: "Expense",
+    navLoan: "Loan",
+    navDebt: "Debt",
+
+    // No Data States
+    noDataAvailable: "No data available",
+    noTransactionData: "No transaction data",
+
+    // Date Format
+    currentMonthYear: "This Month",
+
     month: {
-        thisMonth: "This Month"
-    }
+      thisMonth: "This Month",
+    },
   },
 };
