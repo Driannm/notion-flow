@@ -40,6 +40,7 @@ export const dictionary = {
     
     // Balance Section
     currentBalance: "Saldo Saat Ini",
+    yourMoney: "Uang Anda",
     
     // Summary Cards
     monthlyIncome: "Pemasukan bulanan",
@@ -140,6 +141,7 @@ export const dictionary = {
     
     // Balance Section
     currentBalance: "Current Balance",
+    yourMoney: "Your Money",
     
     // Summary Cards
     monthlyIncome: "Monthly income",
