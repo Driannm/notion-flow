@@ -8,7 +8,7 @@ import {
   ChevronLeft,
   ChevronUp,
   Upload,
-  Pencil, // Icon beda dikit untuk Edit
+  Pencil, 
   Loader2,
   Trash2,
   NotepadText,
@@ -27,8 +27,7 @@ import { ICON_MAP } from "@/lib/constants";
 import { Label } from "@/components/ui/label";
 
 // Import Actions
-import { getExpenseById } from "@/app/action/finance/getExpenses";
-import { updateExpense } from "@/app/action/finance/updateExpenses";
+import { getExpenseById, updateExpense } from "@/app/action/finance/ActionExpenses";
 import { MoneyInput } from "@/components/finance/MoneyInput";
 
 type BreakdownField = {

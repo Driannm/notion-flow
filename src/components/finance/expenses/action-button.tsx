@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { deleteExpense } from "@/app/action/finance/getExpenses"; // Sesuaikan path import
+import { deleteExpense } from "@/app/action/finance/ActionExpenses"; // Sesuaikan path import
 
 export default function ActionButtons({ id }: { id: string }) {
   const router = useRouter();

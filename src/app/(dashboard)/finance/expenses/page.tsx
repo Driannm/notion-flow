@@ -1,5 +1,5 @@
 import * as React from "react";
-import { getExpenses } from "@/app/action/finance/getExpenses";
+import { getExpenses } from "@/app/action/finance/ActionExpenses";
 import ExpensesClientView from "@/components/finance/expenses/client-view";
 
 export const dynamic = "force-dynamic";

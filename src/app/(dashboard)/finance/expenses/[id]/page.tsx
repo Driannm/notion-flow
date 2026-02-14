@@ -7,11 +7,10 @@ import {
   Calendar,
   CreditCard,
   Store,
-  Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ICON_MAP } from "@/lib/constants";
-import { getExpenseById } from "@/app/action/finance/getExpenses"; // Sesuaikan path import
+import { getExpenseById } from "@/app/action/finance/ActionExpenses";
 import ActionButtons from "@/components/finance/expenses/action-button";
 import { Badge } from "@/components/ui/badge";
 

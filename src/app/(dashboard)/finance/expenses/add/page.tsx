@@ -22,9 +22,7 @@ import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ICON_MAP } from "@/lib/constants";
 import { Label } from "@/components/ui/label";
-
-// 👇 IMPORT SERVER ACTION (Sesuaikan path jika beda)
-import { addExpense } from "@/app/action/finance/addExpenses";
+import { addExpense } from "@/app/action/finance/ActionExpenses";
 
 type BreakdownField = {
   id: string;

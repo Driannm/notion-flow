@@ -18,7 +18,7 @@ import SearchFilterBar from "@/components/finance/SearchFilter";
 import { Badge } from "@/components/ui/badge";
 
 // Logic & Data
-import { deleteExpense } from "@/app/action/finance/getExpenses";
+import { deleteExpense } from "@/app/action/finance/ActionExpenses";
 import { ICON_MAP } from "@/lib/constants";
 
 // --- TYPES ---
