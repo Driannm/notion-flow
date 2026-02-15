@@ -19,8 +19,9 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getFinancialInsights } from "@/app/action/finance/getInsights";
+import { getFinancialInsights } from "@/app/action/finance/ActionInsights";
 import Link from "next/link";
+import QuickAdd from "@/components/finance/dashboard/QuickAdd";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { useLanguage } from "@/components/LanguageProvider";
 import {
@@ -348,7 +349,8 @@ export default function DashboardPage() {
       active: false,
       href: "/finance/debts-loans?type=loan",
     },
-    { icon: null, label: "", active: false },
+    // QuickAdd component akan ditempatkan di sini
+    { icon: null, label: "", active: false, isQuickAdd: true },
     {
       icon: CreditCard,
       label: t.navDebt,
@@ -440,7 +442,12 @@ export default function DashboardPage() {
         <main className="flex-1 scroll-smooth pb-24">
           <div className="relative">
             {/* Header Balance */}
-            <div className="relative bg-gradient-to-br from-purple-500 via-violet-500 to-purple-600 dark:from-purple-700 dark:via-violet-700 dark:to-purple-800 pt-12 pb-32 shadow-xl dark:shadow-none">
+            <div
+              className="relative pt-12 pb-32 shadow-xl dark:shadow-none overflow-hidden"
+              style={{
+                background: "radial-gradient(125% 125% at 50% 100%, #000000 40%, #010133 100%)",
+              }}
+            >
               {/* Top Row */}
               <div className="flex items-center justify-between mb-8 px-6">
                 <div className="w-12 h-12 rounded-full border-2 border-white/30 overflow-hidden bg-gradient-to-br from-orange-400 to-pink-400 flex items-center justify-center">
@@ -527,13 +534,13 @@ export default function DashboardPage() {
                                 {card.title}
                               </p>
 
-                              <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight break-words whitespace-normal flex justify-center font-mono">
+                              <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight break-words whitespace-normal flex justify-center font-mono">
                                 {loading ? (
                                   <Skeleton className="h-6 w-50 mx-auto rounded-full bg-white/30" />
                                 ) : (
                                   card.amount
                                 )}
-                              </p>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -562,7 +569,9 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                      {activeChart === "expense" ? t.expenseBreakdown : t.incomeBreakdown}
+                      {activeChart === "expense"
+                        ? t.expenseBreakdown
+                        : t.incomeBreakdown}
                     </h2>
                     <Info className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                   </div>
@@ -762,110 +771,8 @@ export default function DashboardPage() {
             <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-xl shadow-lg dark:shadow-gray-900/30 border border-gray-100/80 dark:border-gray-800/80">
               <div className="flex items-center justify-between px-2 py-2">
                 {navItems.map((item, index) => {
-                  if (!item.icon) {
-                    return (
-                      <div key={index} className="w-14 flex justify-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="group w-14 h-14 -mt-6 bg-gradient-to-br from-purple-500 to-violet-600 text-white rounded-full shadow-lg shadow-purple-500/30 hover:shadow-purple-500/40 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 border-2 border-white dark:border-gray-900">
-                              <Plus className="w-5 h-5 transition-transform duration-200 group-hover:rotate-90" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="center"
-                            sideOffset={14}
-                            className="w-69 rounded-2xl p-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border border-gray-200/60 dark:border-gray-800 shadow-2xl"
-                          >
-                            <div className="px-3 pt-2 pb-1">
-                              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                {t.quickAdd}
-                              </p>
-                            </div>
-                            <DropdownMenuSeparator className="bg-gray-100 dark:bg-gray-800 my-1" />
-
-                            <Link href="/finance/expenses/add">
-                              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                <div className="w-9 h-9 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                                  <TrendingDown className="w-4 h-4 text-red-500" />
-                                </div>
-                                <div className="flex flex-col leading-tight">
-                                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                    {t.addExpense}
-                                  </span>
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {t.trackSpending}
-                                  </span>
-                                </div>
-                              </DropdownMenuItem>
-                            </Link>
-
-                            <Link href="/finance/income/add">
-                              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors">
-                                <div className="w-9 h-9 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                                  <TrendingUp className="w-4 h-4 text-green-500" />
-                                </div>
-                                <div className="flex flex-col leading-tight">
-                                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                    {t.addIncome}
-                                  </span>
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {t.salaryOrEarnings}
-                                  </span>
-                                </div>
-                              </DropdownMenuItem>
-                            </Link>
-
-                            <Link href="/finance/transfer/add">
-                              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                                <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                                  <ArrowLeftRight className="w-4 h-4 text-blue-500" />
-                                </div>
-                                <div className="flex flex-col leading-tight">
-                                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                    {t.addTransfer}
-                                  </span>
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {t.moveBetweenAccounts}
-                                  </span>
-                                </div>
-                              </DropdownMenuItem>
-                            </Link>
-
-                            <Link href="/finance/debts-loans/add?type=debt">
-                              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors">
-                                <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                                  <WalletCards className="w-4 h-4 text-amber-500" />
-                                </div>
-                                <div className="flex flex-col leading-tight">
-                                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                    {t.addDebt}
-                                  </span>
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {t.moneyYouOwe}
-                                  </span>
-                                </div>
-                              </DropdownMenuItem>
-                            </Link>
-
-                            <Link href="/finance/debts-loans/add?type=loan">
-                              <DropdownMenuItem className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
-                                <div className="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                                  <CreditCard className="w-4 h-4 text-indigo-500" />
-                                </div>
-                                <div className="flex flex-col leading-tight">
-                                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                    {t.addLoan}
-                                  </span>
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {t.moneyLentOut}
-                                  </span>
-                                </div>
-                              </DropdownMenuItem>
-                            </Link>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    );
+                  if (item.isQuickAdd) {
+                    return <QuickAdd key={index} />;
                   }
 
                   const Icon = item.icon;

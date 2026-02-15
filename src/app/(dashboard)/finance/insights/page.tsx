@@ -1,5 +1,5 @@
 import React from "react";
-import { getFinancialInsights } from "@/app/action/finance/getInsights";
+import { getFinancialInsights } from "@/app/action/finance/ActionInsights";
 import InsightsClientView from "@/components/finance/insights/client-view";
 import { Loader2 } from "lucide-react";
 
