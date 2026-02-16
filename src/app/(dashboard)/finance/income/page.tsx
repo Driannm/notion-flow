@@ -1,11 +1,11 @@
 import * as React from "react";
-import { getIncomes } from "@/app/action/finance/getIncome";
+import { getIncome } from "@/app/action/finance/ActionIncome";
 import IncomeClientView from "@/components/finance/income/client-view";
 
 export const dynamic = "force-dynamic";
 
 export default async function IncomePage() {
-  const response = await getIncomes();
+  const response = await getIncome();
 
   if (!response?.success || !response.data) {
     // Return empty state

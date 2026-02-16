@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { X, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 
-import { getIncomeById, updateIncome } from "@/app/action/finance/ActionIncome";
+import { addIncome } from "@/app/action/finance/ActionIncome";
 import { INCOME_SOURCES, PAYMENT_GROUPS } from "@/lib/constants";
 
 import { Button } from "@/components/ui/button";
@@ -26,11 +25,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { toast } from "sonner";
 
-export default function EditIncomeForm({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
+export default function IncomeTransactionForm({
+  onClose,
+}: {
+  onClose?: () => void;
 }) {
   const router = useRouter();
   const [amount, setAmount] = useState("");
@@ -39,48 +39,7 @@ export default function EditIncomeForm({
   const [incomeSource, setIncomeSource] = useState("");
   const [bankAccount, setBankAccount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [pageId, setPageId] = useState<string>("");
-
-  useEffect(() => {
-    const initialize = async () => {
-      const resolvedParams = await params;
-      setPageId(resolvedParams.id);
-    };
-    initialize();
-  }, [params]);
-
-  useEffect(() => {
-    if (pageId) {
-      loadIncomeData();
-    }
-  }, [pageId]);
-
-  const loadIncomeData = async () => {
-    if (!pageId) return;
-    
-    setIsFetching(true);
-    const result = await getIncomeById(pageId);
-
-    if (result.success && result.data) {
-      const data = result.data;
-      setDescription(data.title);
-      setAmount(data.amount.toString());
-      setIncomeSource(data.source);
-      setBankAccount(data.bankAccount);
-      
-      // Parse date from string
-      const parsedDate = new Date(data.date);
-      if (!isNaN(parsedDate.getTime())) {
-        setDate(parsedDate);
-      }
-    } else {
-      toast.error("Gagal memuat data income");
-      router.back();
-    }
-    setIsFetching(false);
-  };
 
   const formatCurrency = (value: string) => {
     const numericValue = value.replace(/[^\d]/g, "");
@@ -88,25 +47,25 @@ export default function EditIncomeForm({
     return new Intl.NumberFormat("id-ID").format(parseInt(numericValue));
   };
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAmountChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const numericValue = e.target.value.replace(/[^\d]/g, "");
     setAmount(numericValue);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (!amount || !description || !incomeSource || !bankAccount) {
       toast.error("Data belum lengkap", {
         description: "Semua field wajib diisi.",
       });
       return;
     }
-
-    if (!pageId) return;
-
+  
     setIsLoading(true);
-
+  
     try {
       const formData = new FormData();
       formData.append("name", description);
@@ -114,41 +73,41 @@ export default function EditIncomeForm({
       formData.append("amount", amount);
       formData.append("bankAccount", bankAccount);
       formData.append("date", date.toISOString());
-
-      const result = await updateIncome(pageId, formData);
-
+  
+      const result = await addIncome(formData);
+  
       if (!result.success) {
         throw new Error(result.message);
       }
-
-      toast.success("Income berhasil diupdate!", {
+  
+      toast.success("Income berhasil disimpan!", {
         description: `${description} - Rp ${formatCurrency(amount)}`,
         duration: 3000,
       });
-
-      setTimeout(() => router.back(), 1000);
+  
+      setAmount("");
+      setDescription("");
+      setIncomeSource("");
+      setBankAccount("");
+      setDate(new Date());
+  
+      if (onClose) {
+        setTimeout(() => onClose(), 1000);
+      }
     } catch (error: any) {
-      toast.error("Gagal mengupdate income", {
+      toast.error("Gagal menyimpan income", {
         description: error?.message || "Terjadi kesalahan sistem.",
       });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  if (isFetching) {
-    return (
-      <div className="w-full max-w-md min-h-screen mx-auto flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  };  
 
   return (
-    <div className="w-full max-w-md min-h-screen mx-auto flex flex-col relative overflow-hidden bg-background text-foreground">
+    <div
+      className="w-full max-w-md min-h-screen mx-auto flex flex-col relative overflow-hidden
+      bg-background text-foreground"
+    >
       {/* Header */}
       <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10">
         <button
@@ -158,20 +117,23 @@ export default function EditIncomeForm({
         >
           <X className="w-5 h-5 text-muted-foreground" />
         </button>
-
+  
         <div className="font-semibold text-sm uppercase tracking-wider opacity-70">
-          Edit Income
+          Add Income
         </div>
-
+  
         <div className="w-9" />
       </div>
-
+  
       {/* Content */}
       <div className="flex-1 overflow-y-auto pb-6">
+  
         {/* Amount Section */}
         <div className="m-4 p-6 rounded-xl border border-border shadow bg-card text-center">
           <div className="flex items-center justify-center gap-1">
-            <span className="text-4xl font-bold text-muted-foreground">Rp</span>
+            <span className="text-4xl font-bold text-muted-foreground">
+              Rp
+            </span>
             <input
               type="text"
               value={formatCurrency(amount)}
@@ -180,20 +142,27 @@ export default function EditIncomeForm({
               className="text-5xl font-bold font-mono bg-transparent border-none outline-none text-center w-full max-w-xs text-foreground placeholder:text-muted-foreground"
             />
           </div>
-
+  
           <div className="text-sm text-muted-foreground mt-3">
             {format(date, "dd MMM yyyy")}
           </div>
         </div>
-
+  
         {/* Form Section */}
         <div className="m-4 mt-0 p-6 rounded-xl border border-border bg-card space-y-6 shadow-sm">
+  
           {/* Date */}
           <div className="space-y-2">
             <Label>Date</Label>
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+            <Popover
+              open={isCalendarOpen}
+              onOpenChange={setIsCalendarOpen}
+            >
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
+                <Button
+                  variant="outline"
+                  className="w-full justify-between"
+                >
                   {format(date, "dd/MM/yyyy")}
                   <Calendar className="w-5 h-5 text-muted-foreground" />
                 </Button>
@@ -212,7 +181,7 @@ export default function EditIncomeForm({
               </PopoverContent>
             </Popover>
           </div>
-
+  
           {/* Description */}
           <div className="space-y-2">
             <Label>Description</Label>
@@ -222,11 +191,14 @@ export default function EditIncomeForm({
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-
+  
           {/* Income Source */}
           <div className="space-y-2">
             <Label>Income Source</Label>
-            <Select value={incomeSource} onValueChange={setIncomeSource}>
+            <Select
+              value={incomeSource}
+              onValueChange={setIncomeSource}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select income source" />
               </SelectTrigger>
@@ -239,11 +211,14 @@ export default function EditIncomeForm({
               </SelectContent>
             </Select>
           </div>
-
+  
           {/* Bank Account */}
           <div className="space-y-2">
             <Label>Bank Account</Label>
-            <Select value={bankAccount} onValueChange={setBankAccount}>
+            <Select
+              value={bankAccount}
+              onValueChange={setBankAccount}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select bank account" />
               </SelectTrigger>
@@ -256,9 +231,10 @@ export default function EditIncomeForm({
               </SelectContent>
             </Select>
           </div>
+  
         </div>
       </div>
-
+  
       {/* Bottom Action */}
       <div className="p-4 border-t border-border bg-background/80 backdrop-blur-md sticky bottom-0 z-20">
         <Button
@@ -267,9 +243,9 @@ export default function EditIncomeForm({
           onClick={handleSubmit}
           className="w-full h-12 text-base font-semibold rounded-xl"
         >
-          {isLoading ? "Processing..." : "Update Income"}
+          {isLoading ? "Processing..." : "Add Income"}
         </Button>
       </div>
     </div>
-  );
+  );  
 }
