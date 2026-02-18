@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/immutability */
 "use client";
@@ -16,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   BellDot,
+  Home,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,6 +34,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import YourMoneySection from "@/components/finance/dashboard/BalanceSummary";
+import BalanceHeader from "@/components/finance/dashboard/BalanceHeader";
 
 // Format helper
 const formatCurrency = (value: number) =>
@@ -344,7 +348,7 @@ export default function DashboardPage() {
       href: "/finance/income",
     },
     {
-      icon: DollarSign,
+      icon: WalletCards,
       label: t.navLoan,
       active: false,
       href: "/finance/debts-loans?type=loan",
@@ -370,8 +374,8 @@ export default function DashboardPage() {
       id: 1,
       title: t.income,
       icon: TrendingUp,
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
+      iconBg: "bg-green-100 dark:bg-green-900/30",
+      iconColor: "text-green-500",
       amount: formatCurrency(incomeData.totalCurrent),
       info: t.monthlyIncome,
       change: incomeData.percent,
@@ -380,8 +384,8 @@ export default function DashboardPage() {
       id: 2,
       title: t.expenses,
       icon: TrendingDown,
-      iconBg: "bg-red-100",
-      iconColor: "text-red-600",
+      iconBg: "bg-red-100 dark:bg-red-900/30",
+      iconColor: "text-red-500",
       amount: formatCurrency(expenseData.totalCurrent),
       info: t.monthlyExpenses,
       change: expenseData.percent,
@@ -389,9 +393,9 @@ export default function DashboardPage() {
     {
       id: 3,
       title: t.loan,
-      icon: DollarSign,
-      iconBg: "bg-green-100",
-      iconColor: "text-green-600",
+      icon: WalletCards,
+      iconBg: "bg-indigo-100 dark:bg-indigo-900/30",
+      iconColor: "text-indigo-500",
       amount: formatCurrency(loanData.totalRemaining),
       info: t.activeLoans,
       count: loanData.count,
@@ -400,8 +404,8 @@ export default function DashboardPage() {
       id: 4,
       title: t.debt,
       icon: CreditCard,
-      iconBg: "bg-orange-100",
-      iconColor: "text-orange-600",
+      iconBg: "bg-amber-100 dark:bg-amber-900/30",
+      iconColor: "text-amber-500",
       amount: formatCurrency(debtData.totalRemaining),
       info: t.totalDebt,
       count: debtData.count,
@@ -442,127 +446,15 @@ export default function DashboardPage() {
         <main className="flex-1 scroll-smooth pb-24">
           <div className="relative">
             {/* Header Balance */}
-            <div
-              className="relative pt-12 pb-32 shadow-xl dark:shadow-none overflow-hidden"
-              style={{
-                background: "radial-gradient(125% 125% at 50% 100%, #000000 40%, #010133 100%)",
-              }}
-            >
-              {/* Top Row */}
-              <div className="flex items-center justify-between mb-8 px-6">
-                <div className="w-12 h-12 rounded-full border-2 border-white/30 overflow-hidden bg-gradient-to-br from-orange-400 to-pink-400 flex items-center justify-center">
-                  <img
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
-                    alt="Avatar"
-                    className="w-full h-full"
-                  />
-                </div>
-
-                <button className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-white text-sm font-medium hover:bg-white/30 transition-all">
-                  <span>{t.month.thisMonth}</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-
-                <button className="relative p-2 hover:bg-white/10 rounded-full transition-all">
-                  <Bell className="w-6 h-6 text-white" />
-                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-purple-500"></span>
-                </button>
-              </div>
-
-              {/* Balance Content */}
-              <div className="text-center space-y-3 px-6">
-                <p className="text-white/80 text-sm font-medium tracking-wide">
-                  {t.currentBalance}
-                </p>
-                <h2 className="text-white text-5xl font-bold tracking-tight font-mono">
-                  {loading ? (
-                    <Skeleton className="h-12 w-55 mx-auto rounded-full bg-white/30" />
-                  ) : (
-                    formatCurrency(currentBalance)
-                  )}
-                </h2>
-                <div className="flex justify-center">
-                  {loading ? (
-                    <Skeleton className="h-6 w-49 mx-auto rounded-full bg-white/30" />
-                  ) : (
-                    <div
-                      className={`bg-white/20 backdrop-blur-sm px-4 py-1.5 font-medium text-xs rounded-full font-mono ${
-                        netFlowData >= 0 ? "text-green-200" : "text-red-200"
-                      }`}
-                    >
-                      {netFlowData >= 0 ? "+" : ""}
-                      {formatCurrency(netFlowData)} {t.thisMonthLabel}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <BalanceHeader
+                loading={loading}
+                currentBalance={currentBalance}
+                netFlowData={netFlowData}
+              />
 
             <div className="px-4 space-y-4 -mt-20 relative z-10">
               {/* Your Money */}
-              <div className="-mx-4 bg-white dark:bg-gray-900 rounded-3xl px-6 py-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                      {t.yourMoney}
-                    </h2>
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <div
-                    ref={scrollContainerRef}
-                    className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 scroll-smooth snap-x snap-mandatory"
-                    onScroll={handleScroll}
-                  >
-                    {summaryCards.map((card) => {
-                      const Icon = card.icon;
-                      return (
-                        <div
-                          key={card.id}
-                          className="bg-white dark:bg-gray-800 rounded-2xl p-4 text-center border-1 w-[48%] min-w-[48%] max-w-[48%] flex-shrink-0 snap-start shadow-sm hover:shadow-md transition-shadow"
-                        >
-                          <div className="space-y-2">
-                            <div
-                              className={`w-10 h-10 ${card.iconBg} rounded-xl flex items-center justify-center mx-auto`}
-                            >
-                              <Icon className={`w-5 h-5 ${card.iconColor}`} />
-                            </div>
-
-                            <div className="px-1">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1 flex items-center justify-center gap-1">
-                                {card.title}
-                              </p>
-
-                              <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight break-words whitespace-normal flex justify-center font-mono">
-                                {loading ? (
-                                  <Skeleton className="h-6 w-50 mx-auto rounded-full bg-white/30" />
-                                ) : (
-                                  card.amount
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex justify-center gap-1.5 mt-4">
-                    {Array.from({ length: totalPages }).map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => scrollToIndex(index)}
-                        className={`h-1.5 rounded-full transition-all ${
-                          activeCardIndex === index
-                            ? "w-6 bg-gray-800 dark:bg-gray-300"
-                            : "w-1.5 bg-gray-300 dark:bg-gray-600"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <YourMoneySection loading={loading} summaryCards={summaryCards} />
 
               {/* Dinamis Donut Chart dengan Swipe */}
               <div className="bg-white dark:bg-gray-900 rounded-2xl border-0 p-5 shadow-sm dark:shadow-none">
@@ -666,7 +558,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Insight Banner */}
-              <div className="relative overflow-hidden rounded-2xl">
+              <div className="relative overflow-hidden rounded-full">
                 {/* CONTENT CARD */}
                 <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 p-5 rounded-2xl shadow-xl">
                   <div className="flex items-center justify-between">
@@ -678,9 +570,11 @@ export default function DashboardPage() {
                         {t.insightReady}
                       </p>
                     </div>
-                    <button className="bg-white/20 hover:bg-white/30 text-white h-8 px-4 rounded-full text-xs font-semibold backdrop-blur-sm transition-all">
-                      {t.checkNow}
-                    </button>
+                    <a href="/finance/insights">
+                      <button className="bg-white/20 hover:bg-white/30 text-white h-8 px-4 rounded-full text-xs font-semibold backdrop-blur-sm transition-all">
+                        {t.checkNow}
+                      </button>
+                    </a>
                   </div>
                 </div>
 
@@ -768,7 +662,7 @@ export default function DashboardPage() {
         {/* Clean & Minimalist Bottom Navigation */}
         <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md z-30">
           <div className="relative mx-3 mb-3">
-            <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-xl shadow-lg dark:shadow-gray-900/30 border border-gray-100/80 dark:border-gray-800/80">
+            <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-full shadow-lg dark:shadow-gray-900/30 border border-gray-100/80 dark:border-gray-800/80">
               <div className="flex items-center justify-between px-2 py-2">
                 {navItems.map((item, index) => {
                   if (item.isQuickAdd) {

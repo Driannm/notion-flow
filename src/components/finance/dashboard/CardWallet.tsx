@@ -135,7 +135,6 @@ export default function CardWalletModal({
       <div onClick={() => setOpen(true)} className="cursor-pointer">{trigger}</div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        {/* ✅ TIDAK pakai overflow-hidden di sini — itu yang bikin scroll mati */}
         <DialogContent className="max-w-sm w-full bg-white dark:bg-[#0f0f13] border border-gray-100 dark:border-white/5 rounded-3xl p-6 shadow-2xl">
 
           {/* Header */}
@@ -151,9 +150,9 @@ export default function CardWalletModal({
                   </p>
                 )}
               </div>
-              <DialogClose className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 flex items-center justify-center transition-colors text-gray-500 dark:text-gray-400 text-sm">
+              {/* <DialogClose className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 flex items-center justify-center transition-colors text-gray-500 dark:text-gray-400 text-sm">
                 ✕
-              </DialogClose>
+              </DialogClose> */}
             </div>
           </DialogHeader>
 
