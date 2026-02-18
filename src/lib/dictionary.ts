@@ -61,7 +61,7 @@ export const dictionary = {
 
     // Insight Banner
     insightReady: "Insight keuanganmu sudah siap",
-    checkNow: "Lihat Sekarang",
+    checkNow: "Lihat",
 
     // Transactions Section
     recentTransactionsTitle: "Transaksi Terbaru",
@@ -102,6 +102,9 @@ export const dictionary = {
     month: {
       thisMonth: "Bulan Ini",
     },
+
+    // Income Page
+    
   },
   en: {
     // Main Page

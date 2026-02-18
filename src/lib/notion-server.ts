@@ -6,3 +6,4 @@ export const notion = new Client({
 
 export const DATABASE_ID = process.env.EXPENSES_DATABASE_ID!;
 export const TEMPLATE_DATABASE_ID = process.env.EXPENSES_TEMPLATE_DATABASE_ID!;
+export const INCOME_DATABASE_ID = process.env.INCOME_DATABASE_ID!;
