@@ -166,18 +166,22 @@ export async function addDebtOrLoan(formData: FormData, type: "debt" | "loan") {
 }
 
 // --- 3. UPDATE RECORD ---
-export async function updateDebtOrLoan(id: string, formData: FormData, type: "debt" | "loan") {
-  const dbId = type === "debt" ? DEBTS_DB_ID : LOANS_DB_ID;
-  
-  const name = formData.get("name") as string;
-  const total = Number(formData.get("total"));
-  const paid = Number(formData.get("paid"));
-  const dueDate = formData.get("date") as string;
-  const purpose = formData.get("purpose") as string;
-  const status = formData.get("status") as string;
-
+export async function updateDebtOrLoan(
+  id: string,
+  formData: FormData
+) {
   try {
-    // Dynamically get the correct property names
+    // 🔥 AUTO DETECT DATABASE
+    const page: any = await notion.pages.retrieve({ page_id: id });
+    const dbId = page.parent.database_id;
+
+    const name = formData.get("name") as string;
+    const total = Number(formData.get("total"));
+    const paid = Number(formData.get("paid"));
+    const dueDate = formData.get("date") as string;
+    const purpose = formData.get("purpose") as string;
+    const status = formData.get("status") as string;
+
     const amountPropName = await getAmountPropertyName(dbId);
     const paidPropName = await getPaidPropertyName(dbId);
 
@@ -206,6 +210,7 @@ export async function updateDebtOrLoan(id: string, formData: FormData, type: "de
     return { success: false, message: error.message };
   }
 }
+
 
 // --- 4. RECORD PAYMENT ---
 export async function recordPayment(id: string, newPaidTotal: number, newStatus: string) {
