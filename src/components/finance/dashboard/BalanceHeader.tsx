@@ -10,12 +10,24 @@ interface BalanceHeaderProps {
   currentBalance: number;
   netFlowData: number;
 }
+
+interface CardData {
+  id: number;
+  type: "ATM" | "E-Money";
+  name: string;
+  owner: string;
+  balance: number;
+  bgColor: string;
+  textColor: string;
+}
+
+
 const dummyCards = [
   {
     id: 1234,
     type: "ATM",
     name: "BCA Debit",
-    owner: "John Doe",
+    owner: "Yuda Andrian",
     balance: 5200000,
     bgColor: "linear-gradient(135deg, #667eea, #764ba2)",
     textColor: "white",
@@ -24,7 +36,7 @@ const dummyCards = [
     id: 5678,
     type: "E-Money",
     name: "OVO",
-    owner: "John Doe",
+    owner: "Yuda Andrian",
     balance: 150000,
     bgColor: "linear-gradient(135deg, #f79d00, #64f38c)",
     textColor: "white",
@@ -33,7 +45,7 @@ const dummyCards = [
     id: 9101,
     type: "ATM",
     name: "Mandiri",
-    owner: "John Doe",
+    owner: "Yuda Andrian",
     balance: 2300000,
     bgColor: "linear-gradient(135deg, #43cea2, #185a9d)",
     textColor: "white",
@@ -42,7 +54,7 @@ const dummyCards = [
     id: 3421,
     type: "E-Money",
     name: "GoPay",
-    owner: "John Doe",
+    owner: "Annisa Dava Islami",
     balance: 320000,
     bgColor: "linear-gradient(135deg, #00c6fb, #005bea)",
     textColor: "white",
@@ -51,7 +63,7 @@ const dummyCards = [
     id: 7890,
     type: "ATM",
     name: "BNI Debit",
-    owner: "John Doe",
+    owner: "Keluarga",
     balance: 8750000,
     bgColor: "linear-gradient(135deg, #f7971e, #ffd200)",
     textColor: "white",
@@ -60,12 +72,13 @@ const dummyCards = [
     id: 6543,
     type: "E-Money",
     name: "Dana",
-    owner: "John Doe",
+    owner: "Yuda Andrian",
     balance: 95000,
     bgColor: "linear-gradient(135deg, #ee0979, #ff6a00)",
     textColor: "white",
   },
-];
+] satisfies CardData[];
+
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("en-US", {
