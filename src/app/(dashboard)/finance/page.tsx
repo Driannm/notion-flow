@@ -18,6 +18,7 @@ import {
   ChevronRight,
   BellDot,
   Home,
+  LucideIcon,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -340,7 +341,14 @@ export default function DashboardPage() {
     },
   ];
 
-  const navItems = [
+  type NavItem = {
+    icon: LucideIcon;
+    label: string;
+    active: boolean;
+    href: string;
+  };
+
+  const navItems: NavItem[] = [
     {
       icon: TrendingUp,
       label: t.navIncome,
@@ -353,8 +361,6 @@ export default function DashboardPage() {
       active: false,
       href: "/finance/debts-loans?type=loan",
     },
-    // QuickAdd component akan ditempatkan di sini
-    { icon: null, label: "", active: false, isQuickAdd: true },
     {
       icon: CreditCard,
       label: t.navDebt,
@@ -447,10 +453,10 @@ export default function DashboardPage() {
           <div className="relative">
             {/* Header Balance */}
             <BalanceHeader
-                loading={loading}
-                currentBalance={currentBalance}
-                netFlowData={netFlowData}
-              />
+              loading={loading}
+              currentBalance={currentBalance}
+              netFlowData={netFlowData}
+            />
 
             <div className="px-4 space-y-4 -mt-20 relative z-10">
               {/* Your Money */}
@@ -664,21 +670,29 @@ export default function DashboardPage() {
           <div className="relative mx-3 mb-3">
             <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-full shadow-lg dark:shadow-gray-900/30 border border-gray-100/80 dark:border-gray-800/80">
               <div className="flex items-center justify-between px-2 py-2">
-                {navItems.map((item, index) => {
-                  if (item.isQuickAdd) {
-                    return <QuickAdd key={index} />;
-                  }
-
+                {navItems.slice(0, 2).map((item, index) => {
                   const Icon = item.icon;
                   return (
                     <Link
                       key={index}
-                      href={item.href || "#"}
-                      className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all duration-150 ${
-                        item.active
-                          ? "text-purple-600 dark:text-purple-400"
-                          : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                      }`}
+                      href={item.href}
+                      className="flex flex-col items-center gap-0.5 px-3 py-1.5"
+                    >
+                      <Icon className="w-4.5 h-4.5" />
+                      <span className="text-[10px] font-medium tracking-tight">
+                        {item.label}
+                      </span>
+                    </Link>
+                  );
+                })}
+                <QuickAdd />
+                {navItems.slice(2).map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={index + 2}
+                      href={item.href}
+                      className="flex flex-col items-center gap-0.5 px-3 py-1.5"
                     >
                       <Icon className="w-4.5 h-4.5" />
                       <span className="text-[10px] font-medium tracking-tight">
