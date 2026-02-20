@@ -19,6 +19,8 @@ import {
   BellDot,
   Home,
   LucideIcon,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +29,7 @@ import Link from "next/link";
 import QuickAdd from "@/components/finance/dashboard/QuickAdd";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { useLanguage } from "@/components/LanguageProvider";
+import { getRecentTransactions } from "@/app/action/finance/getRecentTransactions";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -227,6 +230,7 @@ export default function DashboardPage() {
   const { language, setLanguage, t } = useLanguage();
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
 
   // Swipe handler
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -260,16 +264,23 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { success, data } = await getFinancialInsights();
+        const [{ success, data }, recent] = await Promise.all([
+          getFinancialInsights(),
+          getRecentTransactions(6),
+        ]);
+
         if (success) {
           setInsightsData(data);
         }
+
+        setRecentTransactions(recent || []);
       } catch (error) {
-        console.error("Error fetching insights:", error);
+        console.error("Error fetching dashboard data:", error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
@@ -315,31 +326,6 @@ export default function DashboardPage() {
   // Current balance
   const currentBalance =
     incomeData.totalCurrent - expenseData.totalCurrent + 87000;
-
-  const transactions = [
-    {
-      id: 1,
-      merchant: expenseData.topCategories[0]?.name || t.foodDining,
-      icon: "🍽️",
-      iconBg: "bg-purple-100",
-      tags: [t.daily],
-      amount: `-${formatCurrency(
-        expenseData.topCategories[0]?.value || 354.25
-      )}`,
-      amountColor: "text-red-500",
-      secondary: "",
-    },
-    {
-      id: 2,
-      merchant: t.salaryDeposit,
-      icon: "💰",
-      iconBg: "bg-green-100",
-      tags: [t.incomeTag],
-      amount: `+${formatCurrency(incomeData.totalCurrent || 4875)}`,
-      amountColor: "text-green-500",
-      secondary: t.monthly,
-    },
-  ];
 
   type NavItem = {
     icon: LucideIcon;
@@ -445,6 +431,54 @@ export default function DashboardPage() {
   };
 
   const totalPages = Math.ceil(summaryCards.length / 2);
+
+  type GroupedTransactions = {
+    monthYear: string;
+    month: string;
+    year: string;
+    total: number;
+    items: any[];
+  };
+
+  const groupedTransactions: GroupedTransactions[] = (() => {
+    if (!recentTransactions.length) return [];
+
+    const groups: Record<string, GroupedTransactions> = {};
+
+    recentTransactions.forEach((trx) => {
+      const dateObj = new Date(trx.date);
+      const month = dateObj.toLocaleString("en-US", { month: "short" });
+      const year = dateObj.getFullYear().toString();
+      const monthYearKey = `${month}-${year}`;
+
+      if (!groups[monthYearKey]) {
+        groups[monthYearKey] = {
+          monthYear: monthYearKey,
+          month,
+          year,
+          total: 0,
+          items: [],
+        };
+      }
+
+      groups[monthYearKey].items.push({
+        ...trx,
+        dateObj,
+        formattedDate: dateObj.toLocaleDateString("en-US", {
+          day: "numeric",
+          month: "short",
+        }),
+      });
+
+      groups[monthYearKey].total += trx.amount;
+    });
+
+    return Object.values(groups).sort(
+      (a, b) =>
+        new Date(b.items[0].date).getTime() -
+        new Date(a.items[0].date).getTime()
+    );
+  })();
 
   return (
     <div className="min-h-screen flex justify-center bg-gray-50 dark:bg-gray-950">
@@ -607,56 +641,123 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  {transactions.length > 0 ? (
-                    transactions.map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-none transition-shadow"
-                      >
-                        <div className="flex items-center gap-4">
-                          <div
-                            className={`w-12 h-12 ${transaction.iconBg} rounded-xl flex items-center justify-center text-xl flex-shrink-0`}
-                          >
-                            {transaction.icon}
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-gray-900 dark:text-white text-sm mb-1.5">
-                              {transaction.merchant}
-                            </h3>
-                            <div className="flex flex-wrap gap-1.5">
-                              {transaction.tags.map((tag, index) => (
-                                <span
-                                  key={index}
-                                  className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs px-2.5 py-0.5 font-medium border-0 rounded-full"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="text-right flex-shrink-0">
-                            <p
-                              className={`font-bold text-sm font-mono ${transaction.amountColor}`}
-                            >
-                              {transaction.amount}
-                            </p>
-                            {transaction.secondary && (
-                              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                                {transaction.secondary}
-                              </p>
-                            )}
-                          </div>
+                <div className="space-y-8 pb-10">
+                  {loading ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-24 rounded-2xl" />
+                      <Skeleton className="h-24 rounded-2xl" />
+                    </div>
+                  ) : groupedTransactions.length > 0 ? (
+                    groupedTransactions.map((group) => (
+                      <div key={group.monthYear} className="space-y-3">
+                        {/* Month Header */}
+                        <div className="flex justify-between items-end px-2">
+                          <h3 className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                            {group.month} {group.year}
+                          </h3>
+                          <span className="text-xs font-mono font-medium text-zinc-400 dark:text-zinc-500">
+                            {formatCurrency(group.total)}
+                          </span>
                         </div>
+
+                        {/* Group by Date */}
+                        {(() => {
+                          const dateGroups: Record<string, any[]> = {};
+
+                          group.items.forEach((item) => {
+                            if (!dateGroups[item.formattedDate])
+                              dateGroups[item.formattedDate] = [];
+                            dateGroups[item.formattedDate].push(item);
+                          });
+
+                          return Object.entries(dateGroups).map(
+                            ([date, items]) => (
+                              <div key={date} className="space-y-2">
+                                {/* Date Header */}
+                                <div className="flex justify-between items-center px-2">
+                                  <h4 className="text-xs font-medium text-zinc-400 dark:text-zinc-500">
+                                    {date}
+                                  </h4>
+                                  <span className="text-xs text-zinc-400 dark:text-zinc-500 font-medium">
+                                    {formatCurrency(
+                                      items.reduce(
+                                        (sum, item) => sum + item.amount,
+                                        0
+                                      )
+                                    )}
+                                  </span>
+                                </div>
+
+                                {/* Cards */}
+                                <div className="space-y-2">
+                                  {items.map((item) => {
+                                    const iconMap: Record<string, LucideIcon> =
+                                      {
+                                        expense: TrendingDown,
+                                        income: TrendingUp,
+                                        debt: CreditCard,
+                                        loan: WalletCards,
+                                      };
+
+                                    const Icon = iconMap[item.type];
+                                    const isNegative = item.amount < 0;
+
+                                    return (
+                                      <div
+                                        key={item.id}
+                                        className="flex items-center gap-4 p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm hover:bg-zinc-50/60 dark:hover:bg-zinc-800/60 transition-colors"
+                                      >
+                                        <div
+                                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                            isNegative
+                                              ? "bg-red-100 dark:bg-red-900/20 text-red-500"
+                                              : "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-500"
+                                          }`}
+                                        >
+                                          <Icon className="w-5 h-5" />
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex justify-between items-center mb-0.5">
+                                            <h4 className="font-semibold text-sm text-zinc-900 dark:text-zinc-100 truncate pr-2">
+                                              {item.title}
+                                            </h4>
+                                            <span
+                                              className={`font-bold text-sm font-mono ${
+                                                isNegative
+                                                  ? "text-red-500"
+                                                  : "text-emerald-500"
+                                              }`}
+                                            >
+                                              {isNegative ? "-" : "+"}
+                                              {formatCurrency(
+                                                Math.abs(item.amount)
+                                              )}
+                                            </span>
+                                          </div>
+
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-xs text-zinc-400 uppercase tracking-wide">
+                                              {item.type}
+                                            </span>
+                                            <p className="text-xs text-zinc-400">
+                                              {item.dateObj.toLocaleDateString()}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )
+                          );
+                        })()}
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-400 dark:text-gray-500">
-                        {t.noTransactionData}
-                      </p>
+                    <div className="text-center py-10 text-zinc-400">
+                      {t.noTransactionData}
                     </div>
                   )}
                 </div>
