@@ -197,10 +197,22 @@ export const PAYMENT_GROUPS: Record<string, string[]> = {
 export const CARD_IDS: Record<string, string> = {
   "Saving Account": "2e49ec9fc1ce815792fcd3f05a6e6d22",
   "Bank Central Asia": "2e49ec9fc1ce8120a46ce834f4e0931a",
-  "Livin' by Mandiri": "2e19ec9fc1ce809caa8addbea19fd941",
-  "Blu by BCA Digital": "2e19ec9fc1ce80d49f4ce1908f9f95f7",
-  "Bank Jago": "2e19ec9fc1ce80a08391d7ceb02f7ca1",
+  "Livin' by Mandiri": "2e49ec9fc1ce81d3bddbf40b72634c75",
+  "Blu by BCA Digital": "2e49ec9fc1ce8184a156ce73b894d38c",
+  "Bank Jago": "2e49ec9fc1ce81d8b080c2f16be6987b",
   "Seabank": "2e19ec9fc1ce80ab828acb5bfdc0c9f5",
+};
+
+export const CARD_GROUPS: Record<string, string[]> = {
+  Bank: [
+    "Bank Central Asia",
+    "Livin' by Mandiri",
+    "Blu by BCA Digital",
+    "Bank Jago",
+    "Seabank",
+  ],
+  eWallet: ["Gopay", "Link Aja", "Shopee-Pay", "Spaylater"],
+  Tunai: ["Cash"],
 };
 
 export const INCOME_SOURCES = [
