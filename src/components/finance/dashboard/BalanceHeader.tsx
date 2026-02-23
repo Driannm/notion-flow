@@ -4,6 +4,7 @@ import { Home, ChevronDown, CreditCard } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageProvider";
 import CardWallet from "./CardWallet";
+import { getWalletData } from "@/app/action/finance/getCard";
 
 interface BalanceHeaderProps {
   loading: boolean;
@@ -79,6 +80,7 @@ const dummyCards = [
   },
 ] satisfies CardData[];
 
+const { cards, transfers } = await getWalletData();
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("en-US", {
@@ -114,14 +116,15 @@ export default function BalanceHeader({
           <ChevronDown className="w-4 h-4" />
         </button>
         <CardWallet
-          loading={loading}
-          cards={dummyCards}
-          trigger={
-            <button className="relative p-2 hover:bg-white/10 rounded-full transition-all">
+        loading={false}
+        cards={cards}
+        transfers={transfers}
+        trigger={
+          <button className="relative p-2 hover:bg-white/10 rounded-full transition-all">
               <CreditCard className="w-6 h-6 text-white" />
             </button>
-          }
-        />
+        }
+      />
       </div>
 
       {/* Balance Content */}
