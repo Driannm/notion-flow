@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getFinancialInsights } from "@/app/action/finance/ActionInsights";
 import Link from "next/link";
 import QuickAdd from "@/components/finance/dashboard/QuickAdd";
+export const dynamic = "force-dynamic";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { useLanguage } from "@/components/LanguageProvider";
 import { getRecentTransactions } from "@/app/action/finance/getRecentTransactions";
