@@ -11,10 +11,8 @@ import { revalidatePath } from "next/cache";
 
 // Format Date ke WIB (UTC+7)
 const getJakartaDate = (dateStr?: string) => {
-  const date = dateStr ? new Date(dateStr) : new Date();
-  const jakartaOffset = 7 * 60 * 60 * 1000;
-  const jakartaTime = new Date(date.getTime() + jakartaOffset);
-  return jakartaTime.toISOString().replace("Z", "+07:00");
+  if (!dateStr) return undefined;
+  return dateStr;
 };
 
 // Bersihkan strip UUID

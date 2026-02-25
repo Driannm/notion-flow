@@ -47,7 +47,7 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const formatDateKey = (date: Date) => date.toISOString().split("T")[0];
+const formatDateKey = (date: Date) => date.toLocaleDateString("sv-SE"); 
 
 const formatDisplayDate = (date: Date) => {
   const today = new Date();
