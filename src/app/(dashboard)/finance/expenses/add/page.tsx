@@ -11,6 +11,8 @@ import {
   Loader2,
   ArrowLeft,
   NotepadText,
+  ChevronLeft,
+  Folders,
 } from "lucide-react";
 import { DatePicker } from "@/components/finance/expenses/date-picker";
 import { CategorySelect } from "@/components/finance/expenses/category-select";
@@ -143,22 +145,39 @@ export default function ExpenseForm() {
       className="w-full max-w-md min-h-screen mx-auto flex flex-col relative overflow-hidden shadow-2xl
           bg-background text-foreground"
     >
-      {/* Header */}
-      <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.back()}
-          className="-ml-2"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="font-semibold text-sm uppercase tracking-wider opacity-70">
-          Add Transaction
+      {/* Header - Triple Floating Pill with Safe Area */}
+      <div className="sticky top-0 z-50 pt-3 bg-gradient-to-b from-background via-background/50 to-transparent">
+        <div className="px-4 flex items-center justify-between max-w-screen-sm mx-auto w-full">
+          {/* Back - Small Pill */}
+          <div className="bg-foreground/5 backdrop-blur-xl rounded-full border border-foreground/5 shadow-lg hover:bg-foreground/10 transition-colors">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+              className="hover:bg-transparent rounded-full w-10 h-10"
+            >
+              <ChevronLeft className="w-5 h-5 text-foreground/70" />
+            </Button>
+          </div>
+
+          {/* Text - Medium Pill */}
+          <div className="bg-foreground/5 backdrop-blur-xl rounded-full border border-foreground/5 shadow-lg px-6 h-10 flex items-center">
+            <span className="text-sm font-medium text-foreground/50">
+              Add Transaction
+            </span>
+          </div>
+
+          {/* Notes - Small Pill */}
+          <div className="bg-foreground/5 backdrop-blur-xl rounded-full border border-foreground/5 shadow-lg hover:bg-foreground/10 transition-colors">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-transparent rounded-full w-10 h-10"
+            >
+              <Folders className="w-5 h-5 text-foreground/70" />
+            </Button>
+          </div>
         </div>
-        <Button variant="ghost" size="icon" className="-mr-2">
-          <NotepadText className="w-5 h-5" />
-        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto pb-6">
@@ -328,9 +347,9 @@ export default function ExpenseForm() {
       </div>
 
       {/* Actions */}
-      <div className="p-4 border-t border-border bg-background/80 backdrop-blur-md sticky bottom-0 z-20">
+      <div className="p-4 sticky bottom-0 z-20">
         <Button
-          className="w-full h-12 text-base font-semibold shadow-lg shadow-red-500/20 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all active:scale-[0.98]"
+          className="w-full h-12 text-base font-semibold shadow-lg shadow-red-500/20 bg-red-500 hover:bg-red-600 text-white rounded-full transition-all active:scale-[0.98]"
           onClick={handleSubmit}
           disabled={isSubmitting}
         >
