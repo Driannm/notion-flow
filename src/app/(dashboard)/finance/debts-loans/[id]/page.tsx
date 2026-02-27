@@ -66,7 +66,7 @@ function DebtDetailContent() {
         setDebt(result.data);
       } else {
         toast.error("Failed to load data");
-        router.push("/finance/debts");
+        router.push("/finance/debts-loans");
       }
       setIsLoading(false);
     };
@@ -153,7 +153,7 @@ function DebtDetailContent() {
     
     if (result.success) {
       toast.success("Record deleted successfully");
-      router.push("/finance/debts");
+      router.push("/finance/debts-loans");
       router.refresh();
     } else {
       toast.error("Failed to delete record");
@@ -202,7 +202,7 @@ function DebtDetailContent() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={() => router.push(`/finance/debts/${id}/edit?type=${type}`)}>
+              <DropdownMenuItem onClick={() => router.push(`/finance/debts-loans/${id}/edit?type=${type}`)}>
                 <Pencil className="w-4 h-4 mr-2" />
                 Edit
               </DropdownMenuItem>

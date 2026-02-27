@@ -58,7 +58,7 @@ function AddDebtForm() {
 
     if (res.success) {
       toast.success("Berhasil disimpan!");
-      router.push("/finance/debts");
+      router.push("/finance/debts-loans");
       router.refresh();
     } else {
       toast.error("Gagal menyimpan", { description: res.message });

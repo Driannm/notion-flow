@@ -5,7 +5,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Calendar, ChevronLeft } from "lucide-react";
+import { ArrowLeft, Calendar, ChevronLeft, NotepadText } from "lucide-react";
 import { useFinanceFilter } from "@/hooks/UseFilter";
 
 // Client Components yang kita PAKAI:
@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 // Logic & Data
 import { deleteExpense } from "@/app/action/finance/ActionExpenses";
 import { ICON_MAP } from "@/lib/constants";
+import { Button } from "@/components/ui/button";
 
 // --- TYPES ---
 interface Transaction {
@@ -190,18 +191,37 @@ export default function ExpensesClientView({ initialData }: Props) {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans pb-32">
       {/* 1. HEADER (Manual) */}
-      <div className="sticky top-0 z-30 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
-        <div className="px-4 h-14 flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5 text-zinc-500" />
-          </button>
-          <span className="font-semibold text-sm uppercase tracking-wider">
-            Expenses
-          </span>
-          <div className="w-8" />
+      <div className="sticky top-0 z-50 pt-3 bg-gradient-to-b from-background via-background/50 to-transparent">
+        <div className="px-4 flex items-center justify-between max-w-screen-sm mx-auto w-full">
+          {/* Back - Small Pill */}
+          <div className="bg-foreground/5 backdrop-blur-xl rounded-full border border-foreground/5 shadow-lg hover:bg-foreground/10 transition-colors">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+              className="hover:bg-transparent rounded-full w-10 h-10"
+            >
+              <ArrowLeft className="w-4 h-4 text-foreground/70" />
+            </Button>
+          </div>
+
+          {/* Text - Medium Pill */}
+          <div className="bg-foreground/5 backdrop-blur-xl rounded-full border border-foreground/5 shadow-lg px-6 h-10 flex items-center">
+            <span className="text-sm font-medium text-foreground/50">
+              Add Transaction
+            </span>
+          </div>
+
+          {/* Notes - Small Pill */}
+          <div className="bg-foreground/5 backdrop-blur-xl rounded-full border border-foreground/5 shadow-lg hover:bg-foreground/10 transition-colors">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-transparent rounded-full w-10 h-10"
+            >
+              <NotepadText className="w-4 h-4 text-foreground/70" />
+            </Button>
+          </div>
         </div>
       </div>
 
