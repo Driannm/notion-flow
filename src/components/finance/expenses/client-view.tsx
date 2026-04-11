@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { ArrowLeft, Calendar, ChevronLeft, NotepadText } from "lucide-react";
 import { useFinanceFilter } from "@/hooks/UseFilter";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 // Client Components yang kita PAKAI:
 import EmptyState from "@/components/finance/EmptyState";
@@ -315,7 +316,7 @@ export default function ExpensesClientView({ initialData }: Props) {
                 {/* Transaction Items (Manual) */}
                 <div className="space-y-2">
                   {group.items.map((item) => {
-                    const Icon = ICON_MAP[item.category] || ICON_MAP["default"];
+                    const icon = ICON_MAP[item.category] || ICON_MAP["default"];
 
                     return (
                       <SwipeableItem
@@ -331,7 +332,7 @@ export default function ExpensesClientView({ initialData }: Props) {
                         <div className="flex items-center gap-4 p-4 bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-300 dark:border-zinc-700 shadow-md hover:bg-zinc-50/60 dark:hover:bg-zinc-800/60 transition-colors">
                           {/* Icon */}
                           <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 text-red-400">
-                            <Icon className="w-5 h-5" />
+                          <HugeiconsIcon icon={icon} size={20} color="currentColor" strokeWidth={1.5} />
                           </div>
 
                           {/* Content */}

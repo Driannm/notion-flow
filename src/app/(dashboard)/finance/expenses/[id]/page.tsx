@@ -8,11 +8,13 @@ import {
   CreditCard,
   Store,
 } from "lucide-react";
+import { Share04Icon, CircleArrowLeft01Icon, Calendar03Icon, CreditCardValidationIcon, Store03Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { ICON_MAP } from "@/lib/constants";
 import { getExpenseById } from "@/app/action/finance/ActionExpenses";
 import ActionButtons from "@/components/finance/expenses/action-button";
-import { Badge } from "@/components/ui/badge";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { fr } from "date-fns/locale";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +30,7 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
     return notFound();
   }
 
-  const IconComponent = ICON_MAP[data.category] || ICON_MAP["default"];
+  const icon = ICON_MAP[data.category] || ICON_MAP["default"];
 
   const formatIDR = (val: number) =>
     new Intl.NumberFormat("id-ID", {
@@ -48,7 +50,7 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
             size="icon"
             className="rounded-xl w-9 h-9 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800 transition-all"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <HugeiconsIcon icon={CircleArrowLeft01Icon} size={29} />
           </Button>
         </Link>
 
@@ -61,7 +63,7 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
           size="icon"
           className="rounded-xl w-9 h-9 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800 transition-all"
         >
-          <Share2 className="w-4 h-4" />
+          <HugeiconsIcon icon={Share04Icon} size={29} />
         </Button>
       </header>
 
@@ -73,7 +75,13 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
           {/* Icon */}
           <div className="relative mb-6">
             <div className="w-[68px] h-[68px] rounded-[22px] bg-red-50 dark:bg-red-950/40 flex items-center justify-center ring-1 ring-red-100 dark:ring-red-900/40 shadow-sm">
-              <IconComponent className="w-[30px] h-[30px] text-red-500 dark:text-red-400" />
+              <HugeiconsIcon
+                          icon={icon}
+                          size={20}
+                          color="currentColor"
+                          strokeWidth={1.5}
+                          className="w-[30px] h-[30px] text-red-500 dark:text-red-400"
+                        />
             </div>
           </div>
 
@@ -111,7 +119,7 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
             <div className="flex items-center justify-between px-4 py-3.5">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-neutral-200 dark:ring-neutral-700 flex items-center justify-center">
-                  <Calendar className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
+                  <HugeiconsIcon icon={Calendar03Icon} className="w-4 h-4 text-red-500 dark:text-red-400" />
                 </div>
                 <span className="text-sm text-neutral-500 dark:text-neutral-400">Date</span>
               </div>
@@ -126,7 +134,7 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
             <div className="flex items-center justify-between px-4 py-3.5">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-neutral-200 dark:ring-neutral-700 flex items-center justify-center">
-                  <Store className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
+                  <HugeiconsIcon icon={Store03Icon} className="w-4 h-4 text-red-500 dark:text-red-400" />
                 </div>
                 <span className="text-sm text-neutral-500 dark:text-neutral-400">Platform</span>
               </div>
@@ -141,7 +149,7 @@ export default async function ExpenseDetailPage({ params }: PageProps) {
             <div className="flex items-center justify-between px-4 py-3.5">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-white dark:bg-neutral-800 ring-1 ring-neutral-200 dark:ring-neutral-700 flex items-center justify-center">
-                  <CreditCard className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
+                <HugeiconsIcon icon={CreditCardValidationIcon} className="w-4 h-4 text-red-500 dark:text-red-400" />
                 </div>
                 <span className="text-sm text-neutral-500 dark:text-neutral-400">Payment</span>
               </div>

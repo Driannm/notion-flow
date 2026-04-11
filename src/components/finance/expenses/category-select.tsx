@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 interface CategorySelectProps {
   value: string;
@@ -19,7 +20,6 @@ interface CategorySelectProps {
 }
 
 export function CategorySelect({ value, onChange }: CategorySelectProps) {
-
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="w-full h-12">
@@ -32,33 +32,42 @@ export function CategorySelect({ value, onChange }: CategorySelectProps) {
 
       <SelectContent className="max-h-[300px]">
         {/* 2. Loop melalui Object CATEGORY_GROUPS */}
-        {Object.entries(CATEGORY_GROUPS).map(([groupName, categories], index) => (
-          <div key={groupName}>
-            {/* Tambahkan separator antar group, kecuali di paling atas */}
-            {index > 0 && <SelectSeparator className="my-2" />}
-            
-            <SelectGroup>
-              <SelectLabel className="sticky top-0 z-10 bg-popover px-2 py-1.5 text-xs font-semibold text-muted-foreground/70">
-                {groupName}
-              </SelectLabel>
+        {Object.entries(CATEGORY_GROUPS).map(
+          ([groupName, categories], index) => (
+            <div key={groupName}>
+              {/* Tambahkan separator antar group, kecuali di paling atas */}
+              {index > 0 && <SelectSeparator className="my-2" />}
 
-              {categories.map((cat) => {
-                const Icon = ICON_MAP[cat] || ICON_MAP["default"];
-                return (
-                  <SelectItem key={cat} value={cat} className="cursor-pointer pl-8">
-                    <div className="flex items-center gap-3">
-                      <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <span className="truncate">{cat}</span>
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectGroup>
-          </div>
-        ))}
-        
-        {/* Opsional: Handle kategori yang mungkin lupa dimasukkan ke grup */}
-         {/* Kamu bisa menambahkan logic 'Other' disini jika perlu */}
+              <SelectGroup>
+                <SelectLabel className="sticky top-0 z-10 bg-popover px-2 py-1.5 text-xs font-semibold text-muted-foreground/70">
+                  {groupName}
+                </SelectLabel>
+
+                {categories.map((cat) => {
+                  const icon = ICON_MAP[cat] || ICON_MAP["default"];
+                  return (
+                    <SelectItem
+                      key={cat}
+                      value={cat}
+                      className="cursor-pointer pl-8"
+                    >
+                      <div className="flex items-center gap-3">
+                        <HugeiconsIcon
+                          icon={icon}
+                          size={20}
+                          color="currentColor"
+                          strokeWidth={1.5}
+                          className="w-4 h-4 text-muted-foreground shrink-0"
+                        />
+                        <span className="truncate">{cat}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectGroup>
+            </div>
+          )
+        )}
       </SelectContent>
     </Select>
   );

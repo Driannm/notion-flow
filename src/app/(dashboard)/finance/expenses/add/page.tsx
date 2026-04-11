@@ -14,6 +14,8 @@ import {
   ChevronLeft,
   Folders,
 } from "lucide-react";
+import { Download03Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react";
 import { DatePicker } from "@/components/finance/expenses/date-picker";
 import { CategorySelect } from "@/components/finance/expenses/category-select";
 import { PlatformSelect } from "@/components/finance/expenses/platform-select";
@@ -190,11 +192,19 @@ export default function ExpenseForm() {
 
           <div className="w-14 h-14 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
             {(() => {
-              const IconComp =
+              const iconDef =
                 category && ICON_MAP[category]
                   ? ICON_MAP[category]
-                  : BanknoteArrowDown;
-              return <IconComp className="text-red-500 w-8 h-8" />;
+                  : Download03Icon;
+              return (
+                <HugeiconsIcon
+                  icon={iconDef}
+                  size={32}
+                  color="currentColor"
+                  className="text-red-500"
+                  strokeWidth={1.5}
+                />
+              );
             })()}
           </div>
 

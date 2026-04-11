@@ -8,7 +8,7 @@ import {
   ChevronLeft,
   ChevronUp,
   Upload,
-  Pencil, 
+  Pencil,
   Loader2,
   Trash2,
   NotepadText,
@@ -27,8 +27,13 @@ import { ICON_MAP } from "@/lib/constants";
 import { Label } from "@/components/ui/label";
 
 // Import Actions
-import { getExpenseById, updateExpense } from "@/app/action/finance/ActionExpenses";
+import {
+  getExpenseById,
+  updateExpense,
+} from "@/app/action/finance/ActionExpenses";
 import { MoneyInput } from "@/components/finance/MoneyInput";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Download03Icon } from "@hugeicons/core-free-icons";
 
 type BreakdownField = {
   id: string;
@@ -101,7 +106,7 @@ export default function EditExpensePage({
           setBreakdownFields((prev) =>
             prev.map((field) => {
               if (field.id === "shipping" && data.shipping)
-                return { ...field, value: data.shipping.toString() }; 
+                return { ...field, value: data.shipping.toString() };
               if (field.id === "discount" && data.discount)
                 return { ...field, value: data.discount.toString() };
               if (field.id === "servicefee" && data.serviceFee)
@@ -200,8 +205,10 @@ export default function EditExpensePage({
   }
 
   return (
-    <div className="w-full max-w-md min-h-screen mx-auto flex flex-col relative overflow-hidden shadow-2xl
-      bg-background text-foreground">
+    <div
+      className="w-full max-w-md min-h-screen mx-auto flex flex-col relative overflow-hidden shadow-2xl
+      bg-background text-foreground"
+    >
       {/* Header */}
       <div className="px-4 py-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10">
         <Button
@@ -228,11 +235,19 @@ export default function EditExpensePage({
 
           <div className="w-14 h-14 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center mx-auto mb-4">
             {(() => {
-              const IconComp =
+              const iconDef =
                 category && ICON_MAP[category]
                   ? ICON_MAP[category]
-                  : BanknoteArrowDown;
-              return <IconComp className="text-blue-500 w-8 h-8" />;
+                  : Download03Icon;
+              return (
+                <HugeiconsIcon
+                  icon={iconDef}
+                  size={32}
+                  color="currentColor"
+                  className="text-red-500"
+                  strokeWidth={1.5}
+                />
+              );
             })()}
           </div>
 
