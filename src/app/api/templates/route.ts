@@ -1,10 +1,10 @@
 // src/app/api/templates/route.ts
 import { NextResponse } from "next/server";
-import { notion, TEMPLATE_DATABASE_ID } from "@/lib/notion-server";
+import { notion, EXPENSES_TEMPLATE_DATABASE_ID } from "@/lib/notion-server";
 
 export async function GET() {
   try {
-    if (!TEMPLATE_DATABASE_ID) {
+    if (!EXPENSES_TEMPLATE_DATABASE_ID) {
       return NextResponse.json(
         { message: "Missing EXPENSES_TEMPLATE_DATABASE_ID" },
         { status: 500 }
@@ -12,7 +12,7 @@ export async function GET() {
     }
 
     const response = await notion.databases.query({
-      database_id: TEMPLATE_DATABASE_ID,
+      database_id: EXPENSES_TEMPLATE_DATABASE_ID,
       sorts: [{ property: "Name", direction: "ascending" }],
     });
 
