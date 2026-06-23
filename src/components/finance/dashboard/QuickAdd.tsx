@@ -39,7 +39,7 @@ export default function QuickAdd() {
       description: t.salaryOrEarnings,
     },
     {
-      href: "/finance/transfer/add",
+      href: "/finance/wallet",
       icon: ArrowLeftRight,
       iconBg: "bg-blue-100 dark:bg-blue-900/30",
       iconColor: "text-blue-500",
